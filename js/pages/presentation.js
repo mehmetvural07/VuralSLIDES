@@ -30,7 +30,7 @@
       const sc = document.createElement('div');
       sc.className = 'sc';
       sc.style.background = s.background || c.bg;
-      s.elements.forEach(el => {
+      s.elements.forEach((el, ei) => {
         const d = document.createElement('div');
         d.className = 'pe';
         let css = `left:${sx(el.x)};top:${sy(el.y)};width:${sx(el.width)};height:${sy(el.height)}`;
@@ -41,7 +41,8 @@
           d.dataset.anim = (emphasis ? 'emphasis-' : 'entrance-') + el.animType
           css += `;--anim-name:anim-${el.animType}`
           if (el.animDuration != null) css += `;--anim-dur:${el.animDuration}s`
-          if (el.animDelay != null) css += `;--anim-delay:${el.animDelay}s`
+          const baseDelay = el.animDelay || 0
+          css += `;--anim-delay:${(baseDelay + ei * 0.08).toFixed(2)}s`
         }
         d.style.cssText = css;
         if (el.type === 'text') {
