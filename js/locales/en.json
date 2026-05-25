@@ -89,6 +89,7 @@
   "anim.zoomOut": "Zoom Out",
   "anim.bounce": "Bounce",
   "anim.pulse": "Pulse",
+  "anim.applyAll": "Apply to All",
 
   "settings.title": "Settings",
   "settings.cancel": "Cancel",

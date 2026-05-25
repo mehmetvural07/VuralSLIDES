@@ -72,8 +72,29 @@ function showPanel(el) {
   f(I18n.t('panel.animDuration'), 'animDuration', 'n', { min: 0.1, step: 0.1 });
   f(I18n.t('panel.animDelay'), 'animDelay', 'n', { min: 0, step: 0.1 });
   html += '</div>';
+  html += '<button id="apply-anim-all" class="btn-secondary" style="width:100%;margin-top:8px">' + I18n.t('anim.applyAll') + '</button>';
 
   body.innerHTML = html;
+  const applyBtn = document.getElementById('apply-anim-all');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      const e = selEl();
+      if (!e || !e.animType || e.animType === 'none') return;
+      save();
+      const s = slide();
+      if (!s) return;
+      s.elements.forEach(el => {
+        if (el.id !== e.id) {
+          el.animType = e.animType;
+          el.animDuration = e.animDuration;
+          el.animDelay = e.animDelay;
+        }
+      });
+      renderSlide();
+      renderThumbs();
+    });
+  }
+  if (window.lucide) lucide.createIcons();
   body.querySelectorAll('input,select').forEach(inp => {
     inp.addEventListener('change', () => {
       const k = inp.dataset.k;
