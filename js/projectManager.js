@@ -1,5 +1,11 @@
 const ProjectManager = {
-  config: { projects: [], recentProjects: [], settings: { theme: 'dark', autoSave: true } },
+  config: { projects: [], recentProjects: [], settings: {
+    theme: 'dark', language: 'tr', autoSave: true, autoSaveInterval: 60,
+    defaultTemplate: 'blank', recentCount: 10,
+    snapToGrid: false, gridSize: 20,
+    defaultFontFamily: 'Arial', defaultFontSize: 16,
+    canvasBg: '#1a1a1a', autoOpenPanel: true, thumbSize: 'medium'
+  } },
   _loaded: false,
 
   async init() {
@@ -158,6 +164,18 @@ const ProjectManager = {
       return new Date(b.lastModified) - new Date(a.lastModified);
     });
     return sorted;
+  },
+
+  async getSettings() {
+    await this.init();
+    return this.config.settings || {};
+  },
+
+  async updateSettings(settings) {
+    await this.init();
+    Object.assign(this.config.settings, settings);
+    await this.save();
+    return true;
   },
 
   async search(query) {

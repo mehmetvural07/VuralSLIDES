@@ -57,5 +57,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Window control
-  closeWindow: () => window.close()
+  closeWindow: () => window.close(),
+
+  // External links
+  openExternal: (url) => ipcRenderer.invoke('open-external', url)
 });

@@ -72,7 +72,96 @@ function loadProjectData(d) {
   document.title = `oSlide2 - ${name}`;
 }
 
+let settingsCache = {};
+
+function setSettingField(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.type === 'checkbox') el.checked = !!value;
+  else el.value = value != null ? value : '';
+}
+
+async function openSettings() {
+  if (!window.electronAPI) return;
+  const config = await window.electronAPI.getConfig();
+  const s = config.settings || {};
+  settingsCache = { ...s };
+  setSettingField('set-theme', s.theme);
+  setSettingField('set-language', s.language);
+  setSettingField('set-autosave', s.autoSave);
+  setSettingField('set-autosave-interval', s.autoSaveInterval);
+  setSettingField('set-default-template', s.defaultTemplate);
+  setSettingField('set-recent-count', s.recentCount);
+  setSettingField('set-snap', s.snapToGrid);
+  setSettingField('set-grid-size', s.gridSize);
+  setSettingField('set-font-family', s.defaultFontFamily);
+  setSettingField('set-font-size', s.defaultFontSize);
+  setSettingField('set-canvas-bg', s.canvasBg);
+  setSettingField('set-auto-panel', s.autoOpenPanel);
+  setSettingField('set-thumb-size', s.thumbSize);
+  document.getElementById('settings-overlay').classList.remove('hidden');
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.add('hidden');
+}
+
+async function saveSettings() {
+  const s = {
+    theme: document.getElementById('set-theme')?.value,
+    language: document.getElementById('set-language')?.value,
+    autoSave: document.getElementById('set-autosave')?.checked,
+    autoSaveInterval: parseInt(document.getElementById('set-autosave-interval')?.value) || 60,
+    defaultTemplate: document.getElementById('set-default-template')?.value,
+    recentCount: parseInt(document.getElementById('set-recent-count')?.value) || 10,
+    snapToGrid: document.getElementById('set-snap')?.checked,
+    gridSize: parseInt(document.getElementById('set-grid-size')?.value) || 20,
+    defaultFontFamily: document.getElementById('set-font-family')?.value,
+    defaultFontSize: parseInt(document.getElementById('set-font-size')?.value) || 16,
+    canvasBg: document.getElementById('set-canvas-bg')?.value,
+    autoOpenPanel: document.getElementById('set-auto-panel')?.checked,
+    thumbSize: document.getElementById('set-thumb-size')?.value
+  };
+  if (window.electronAPI) {
+    const config = await window.electronAPI.getConfig();
+    Object.assign(config.settings || {}, s);
+    await window.electronAPI.saveConfig(config);
+  }
+  settingsCache = s;
+  applyTheme(s.theme);
+  closeSettings();
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.style.setProperty('--bg', '#f5f5f5');
+    document.documentElement.style.setProperty('--surface', '#ffffff');
+    document.documentElement.style.setProperty('--surface2', '#f0f0f0');
+    document.documentElement.style.setProperty('--surface3', '#e0e0e0');
+    document.documentElement.style.setProperty('--border', '#d0d0d0');
+    document.documentElement.style.setProperty('--text', '#222222');
+    document.documentElement.style.setProperty('--text2', '#888888');
+  } else {
+    document.documentElement.style.setProperty('--bg', '#0a0a0a');
+    document.documentElement.style.setProperty('--surface', '#141414');
+    document.documentElement.style.setProperty('--surface2', '#1e1e1e');
+    document.documentElement.style.setProperty('--surface3', '#2a2a2a');
+    document.documentElement.style.setProperty('--border', '#2e2e2e');
+    document.documentElement.style.setProperty('--text', '#e8e8e8');
+    document.documentElement.style.setProperty('--text2', '#888888');
+  }
+}
+
+async function loadTheme() {
+  if (window.electronAPI) {
+    const config = await window.electronAPI.getConfig();
+    applyTheme(config.settings?.theme || 'dark');
+  }
+}
+
 function init() {
+  loadTheme();
   newProject();
   document.getElementById('add-slide-btn')?.addEventListener('click', addSlide);
   document.getElementById('dup-slide-btn')?.addEventListener('click', dupSlide);
@@ -104,6 +193,21 @@ function init() {
 
   if (window.lucide) lucide.createIcons();
 
+  // Settings panel
+  document.getElementById('editor-settings-btn')?.addEventListener('click', () => openSettings());
+  document.getElementById('settings-close')?.addEventListener('click', closeSettings);
+  document.getElementById('settings-cancel')?.addEventListener('click', closeSettings);
+  document.getElementById('settings-save')?.addEventListener('click', saveSettings);
+  document.querySelectorAll('.settings-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabId = tab.dataset.tab;
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelector(`.settings-tab[data-tab="${tabId}"]`)?.classList.add('active');
+      document.getElementById(`tab-${tabId}`)?.classList.add('active');
+    });
+  });
+
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); return; }
     if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); return; }
@@ -114,6 +218,7 @@ function init() {
     if (e.ctrlKey && e.key === 'i') { e.preventDefault(); toggleItalic(); }
     if (e.ctrlKey && e.key === 'u') { e.preventDefault(); toggleUnderline(); }
     if (e.key === 'F5') { e.preventDefault(); startPresentation(); }
+    if (e.key === 'Escape') closeSettings();
   });
 
   document.getElementById('home-btn')?.addEventListener('click', () => {

@@ -1,21 +1,7 @@
 (function() {
   let ctxTarget = null;
-
   let favFilterActive = false;
-
-  async function init() {
-    await ProjectManager.init();
-    render();
-    bindEvents();
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { closeDialog(); closeRename(); hideCtx(); }
-      // Ctrl+1..9 quick open recent projects
-      if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
-        const idx = parseInt(e.key) - 1;
-        openRecentByIndex(idx);
-      }
-    });
-  }
+  let settingsCache = {};
 
   async function render() {
     const projects = favFilterActive
@@ -177,13 +163,16 @@
           break;
       }
     });
-    document.getElementById('settings-btn')?.addEventListener('click', () => {
-      alert('Ayarlar paneli henüz eklenecek.');
+    document.getElementById('settings-btn')?.addEventListener('click', openSettings);
+    document.getElementById('settings-close')?.addEventListener('click', closeSettings);
+    document.getElementById('settings-cancel')?.addEventListener('click', closeSettings);
+    document.getElementById('settings-save')?.addEventListener('click', saveSettings);
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchSettingsTab(tab.dataset.tab));
     });
-
-    // Settings
-    document.getElementById('settings-btn')?.addEventListener('click', () => {
-      alert('Ayarlar paneli henüz eklenecek.');
+    document.getElementById('about-github')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.electronAPI) window.electronAPI.openExternal('https://github.com/not0kkinex/oSlide2');
     });
 
     // Refresh when returning from editor
@@ -391,6 +380,105 @@
       grid.appendChild(card);
     });
     if (window.lucide) lucide.createIcons();
+  }
+
+  async function openSettings() {
+    const settings = await ProjectManager.getSettings();
+    settingsCache = { ...settings };
+    setSettingField('set-theme', settings.theme);
+    setSettingField('set-language', settings.language);
+    setSettingField('set-autosave', settings.autoSave);
+    setSettingField('set-autosave-interval', settings.autoSaveInterval);
+    setSettingField('set-default-template', settings.defaultTemplate);
+    setSettingField('set-recent-count', settings.recentCount);
+    setSettingField('set-snap', settings.snapToGrid);
+    setSettingField('set-grid-size', settings.gridSize);
+    setSettingField('set-font-family', settings.defaultFontFamily);
+    setSettingField('set-font-size', settings.defaultFontSize);
+    setSettingField('set-canvas-bg', settings.canvasBg);
+    setSettingField('set-auto-panel', settings.autoOpenPanel);
+    setSettingField('set-thumb-size', settings.thumbSize);
+    document.getElementById('settings-overlay').classList.remove('hidden');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function setSettingField(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!value;
+    else el.value = value != null ? value : '';
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-overlay').classList.add('hidden');
+  }
+
+  function switchSettingsTab(tabId) {
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.settings-tab[data-tab="${tabId}"]`)?.classList.add('active');
+    document.getElementById(`tab-${tabId}`)?.classList.add('active');
+  }
+
+  async function saveSettings() {
+    const s = {
+      theme: document.getElementById('set-theme')?.value,
+      language: document.getElementById('set-language')?.value,
+      autoSave: document.getElementById('set-autosave')?.checked,
+      autoSaveInterval: parseInt(document.getElementById('set-autosave-interval')?.value) || 60,
+      defaultTemplate: document.getElementById('set-default-template')?.value,
+      recentCount: parseInt(document.getElementById('set-recent-count')?.value) || 10,
+      snapToGrid: document.getElementById('set-snap')?.checked,
+      gridSize: parseInt(document.getElementById('set-grid-size')?.value) || 20,
+      defaultFontFamily: document.getElementById('set-font-family')?.value,
+      defaultFontSize: parseInt(document.getElementById('set-font-size')?.value) || 16,
+      canvasBg: document.getElementById('set-canvas-bg')?.value,
+      autoOpenPanel: document.getElementById('set-auto-panel')?.checked,
+      thumbSize: document.getElementById('set-thumb-size')?.value
+    };
+    await ProjectManager.updateSettings(s);
+    settingsCache = s;
+    applyTheme(s.theme);
+    closeSettings();
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      document.documentElement.style.setProperty('--bg', '#f5f5f5');
+      document.documentElement.style.setProperty('--surface', '#ffffff');
+      document.documentElement.style.setProperty('--surface2', '#f0f0f0');
+      document.documentElement.style.setProperty('--surface3', '#e0e0e0');
+      document.documentElement.style.setProperty('--border', '#d0d0d0');
+      document.documentElement.style.setProperty('--text', '#222222');
+      document.documentElement.style.setProperty('--text2', '#888888');
+    } else {
+      document.documentElement.style.setProperty('--bg', '#0a0a0a');
+      document.documentElement.style.setProperty('--surface', '#141414');
+      document.documentElement.style.setProperty('--surface2', '#1e1e1e');
+      document.documentElement.style.setProperty('--surface3', '#2a2a2a');
+      document.documentElement.style.setProperty('--border', '#2e2e2e');
+      document.documentElement.style.setProperty('--text', '#e8e8e8');
+      document.documentElement.style.setProperty('--text2', '#888888');
+    }
+  }
+
+  async function loadTheme() {
+    const settings = await ProjectManager.getSettings();
+    applyTheme(settings.theme || 'dark');
+  }
+
+  async function init() {
+    await ProjectManager.init();
+    await loadTheme();
+    render();
+    bindEvents();
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeDialog(); closeRename(); hideCtx(); closeSettings(); }
+      if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key) - 1;
+        openRecentByIndex(idx);
+      }
+    });
   }
 
   function timeAgo(dateStr) {

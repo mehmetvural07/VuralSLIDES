@@ -51,6 +51,7 @@
         <button class="tb-btn" data-action="delete" title="Sil"><i data-lucide="trash-2"></i></button>
       </div>
       <div class="topbar-right">
+        <button class="tb-btn" id="editor-settings-btn" title="Ayarlar"><i data-lucide="settings"></i></button>
         <button class="tb-btn accent" data-action="start-presentation" title="Sunum (F5)"><i data-lucide="play"></i></button>
       </div>
     </header>
@@ -92,6 +93,68 @@
         <option value="nature">Doğa</option>
         <option value="ocean">Okyanus</option>
       </select>
+    </div>
+  </div>
+
+  <!-- Editor Settings Panel -->
+  <div id="settings-overlay" class="hidden">
+    <div id="settings-panel">
+      <div class="settings-head">
+        <span class="settings-title">Ayarlar</span>
+        <button id="settings-close"><i data-lucide="x"></i></button>
+      </div>
+      <div class="settings-tabs">
+        <button class="settings-tab active" data-tab="general">Genel</button>
+        <button class="settings-tab" data-tab="editor">Düzenleyici</button>
+        <button class="settings-tab" data-tab="shortcuts">Kısayollar</button>
+        <button class="settings-tab" data-tab="about">Hakkında</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-tab-content active" id="tab-general">
+          <div class="sg"><label class="sg-label">Tema</label><select id="set-theme"><option value="dark">Koyu</option><option value="light">Açık</option></select></div>
+          <div class="sg"><label class="sg-label">Dil</label><select id="set-language"><option value="tr">Türkçe</option><option value="en">English</option></select></div>
+          <div class="sg"><label class="sg-label"><span>Otomatik Kaydet</span><input type="checkbox" id="set-autosave"></label></div>
+          <div class="sg" id="sg-autosave-interval"><label class="sg-label">Kaydetme Aralığı</label><select id="set-autosave-interval"><option value="30">30 saniye</option><option value="60">1 dakika</option><option value="120">2 dakika</option><option value="300">5 dakika</option></select></div>
+          <div class="sg"><label class="sg-label">Varsayılan Şablon</label><select id="set-default-template"><option value="blank">Boş Proje</option><option value="business">İş Sunumu</option><option value="education">Eğitim</option><option value="minimal">Minimalist</option></select></div>
+          <div class="sg"><label class="sg-label">Son Proje Sayısı</label><select id="set-recent-count"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select></div>
+        </div>
+        <div class="settings-tab-content" id="tab-editor">
+          <div class="sg"><label class="sg-label"><span>Izgaraya Yapış</span><input type="checkbox" id="set-snap"></label></div>
+          <div class="sg"><label class="sg-label">Izgara Aralığı</label><select id="set-grid-size"><option value="10">10px</option><option value="20">20px</option><option value="50">50px</option></select></div>
+          <div class="sg"><label class="sg-label">Varsayılan Yazı Tipi</label><select id="set-font-family"><option value="Arial">Arial</option><option value="Helvetica">Helvetica</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option></select></div>
+          <div class="sg"><label class="sg-label">Varsayılan Yazı Boyutu</label><select id="set-font-size"><option value="14">14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option><option value="24">24px</option></select></div>
+          <div class="sg"><label class="sg-label">Canvas Arkaplan Rengi</label><input type="color" id="set-canvas-bg" value="#1a1a1a"></div>
+          <div class="sg"><label class="sg-label"><span>Özellik Panelini Otomatik Aç</span><input type="checkbox" id="set-auto-panel"></label></div>
+          <div class="sg"><label class="sg-label">Thumbnail Boyutu</label><select id="set-thumb-size"><option value="small">Küçük</option><option value="medium">Orta</option><option value="large">Büyük</option></select></div>
+        </div>
+        <div class="settings-tab-content" id="tab-shortcuts">
+          <div class="shortcuts-list">
+            <div class="sc-item"><span class="sc-key">Ctrl+Z</span><span class="sc-desc">Geri Al</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+Y</span><span class="sc-desc">İleri Al</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+S</span><span class="sc-desc">Kaydet</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+C</span><span class="sc-desc">Kopyala</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+V</span><span class="sc-desc">Yapıştır</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+B</span><span class="sc-desc">Kalın</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+I</span><span class="sc-desc">İtalik</span></div>
+            <div class="sc-item"><span class="sc-key">Ctrl+U</span><span class="sc-desc">Altı Çizili</span></div>
+            <div class="sc-item"><span class="sc-key">Delete</span><span class="sc-desc">Seçili Öğeyi Sil</span></div>
+            <div class="sc-item"><span class="sc-key">F5</span><span class="sc-desc">Sunumu Başlat</span></div>
+            <div class="sc-item"><span class="sc-key">Escape</span><span class="sc-desc">Panel/Menü Kapat</span></div>
+          </div>
+        </div>
+        <div class="settings-tab-content" id="tab-about">
+          <div class="about-section">
+            <div class="about-logo">oSlide2</div>
+            <div class="about-version">v1.0.0</div>
+            <div class="about-desc">Electron tabanlı modern sunum uygulaması</div>
+            <div class="about-tech"><span>Electron</span><span>Node.js</span><span>Lucide</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-foot">
+        <button id="settings-cancel" class="btn-secondary">İptal</button>
+        <button id="settings-save" class="btn-primary">Kaydet</button>
+      </div>
     </div>
   </div>
 

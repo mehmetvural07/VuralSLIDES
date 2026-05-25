@@ -14,7 +14,13 @@ function loadConfig() {
       return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
     }
   } catch {}
-  return { projects: [], recentProjects: [], settings: { theme: 'dark', autoSave: true } };
+  return { projects: [], recentProjects: [], settings: {
+    theme: 'dark', language: 'tr', autoSave: true, autoSaveInterval: 60,
+    defaultTemplate: 'blank', recentCount: 10,
+    snapToGrid: false, gridSize: 20,
+    defaultFontFamily: 'Arial', defaultFontSize: 16,
+    canvasBg: '#1a1a1a', autoOpenPanel: true, thumbSize: 'medium'
+  } };
 }
 
 function saveConfig(config) {
@@ -393,6 +399,12 @@ function buildSlideHTML(slide, theme) {
   }).join('\n');
   return `<!DOCTYPE html><html><head><style>*{margin:0;padding:0;box-sizing:border-box}body{width:1280px;height:720px;overflow:hidden;background:${slide.background || colors.bg};font-family:Arial,sans-serif;color:${colors.text}}</style></head><body>${elements}</body></html>`;
 }
+
+ipcMain.handle('open-external', async (event, url) => {
+  const { shell } = require('electron');
+  await shell.openExternal(url);
+  return true;
+});
 
 app.whenReady().then(() => {
   createHomeWindow();
