@@ -57,6 +57,12 @@
       info.className = 'card-info';
       info.innerHTML = `<div class="card-name">${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} slide • ${timeAgo(p.lastModified)}</div>`;
 
+      const delBtn = document.createElement('button');
+      delBtn.className = 'card-del-btn';
+      delBtn.innerHTML = '<i data-lucide="trash-2"></i>';
+      delBtn.onclick = async (e) => { e.stopPropagation(); if (confirm('Bu projeyi silmek istediğinize emin misiniz?')) { await ProjectManager.delete(p.id); render(); } };
+
+      card.appendChild(delBtn);
       card.appendChild(thumb);
       card.appendChild(info);
 
@@ -92,6 +98,7 @@
     } else {
       recent.classList.add('hidden');
     }
+    if (window.lucide) lucide.createIcons();
   }
 
   function bindEvents() {
@@ -123,6 +130,25 @@
     document.getElementById('rename-confirm')?.addEventListener('click', confirmRename);
     document.getElementById('rename-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') confirmRename(); });
 
+    // Context menu actions
+    document.getElementById('ctx-menu')?.addEventListener('click', async (e) => {
+      const item = e.target.closest('.ctx-item');
+      const action = item?.dataset.action;
+      if (!action || !ctxTarget) return;
+      hideCtx();
+      switch (action) {
+        case 'open': openProject(ctxTarget); break;
+        case 'rename': showRename(ctxTarget); break;
+        case 'duplicate': await ProjectManager.duplicate(ctxTarget); render(); break;
+        case 'delete':
+          if (confirm('Bu projeyi silmek istediğinize emin misiniz?')) {
+            await ProjectManager.delete(ctxTarget);
+            render();
+          }
+          break;
+      }
+    });
+
     // Settings
     document.getElementById('settings-btn')?.addEventListener('click', () => {
       alert('Ayarlar paneli henüz eklenecek.');
@@ -130,10 +156,16 @@
 
     // Refresh when returning from editor
     if (window.electronAPI?.onRefreshHome) {
-      window.electronAPI.onRefreshHome(() => render());
+      window.electronAPI.onRefreshHome(async () => {
+        await ProjectManager.reload();
+        render();
+      });
     }
     // Also refresh when window gets focus (for manual returns)
-    window.addEventListener('focus', () => render());
+    window.addEventListener('focus', async () => {
+      await ProjectManager.reload();
+      render();
+    });
 
     // Init Lucide icons
     if (window.lucide) lucide.createIcons();
@@ -166,10 +198,9 @@
         });
         if (filePath) {
           result.project.path = filePath;
-          // Update project path in config
-          const config = await window.electronAPI.getConfig();
-          const p = config.projects.find(pr => pr.id === result.project.id);
-          if (p) { p.path = filePath; await window.electronAPI.saveConfig(config); }
+          // Update ProjectManager cached config
+          const pmP = ProjectManager.config.projects.find(pr => pr.id === result.project.id);
+          if (pmP) pmP.path = filePath;
         }
       }
       window.electronAPI.openEditor({ ...result.slideData, _projectId: result.project.id, _projectName: result.project.name });
@@ -209,25 +240,6 @@
     document.getElementById('ctx-menu').classList.add('hidden');
     ctxTarget = null;
   }
-
-  // Context menu actions
-  document.getElementById('ctx-menu')?.addEventListener('click', async (e) => {
-    const item = e.target.closest('.ctx-item');
-    const action = item?.dataset.action;
-    if (!action || !ctxTarget) return;
-    hideCtx();
-    switch (action) {
-      case 'open': openProject(ctxTarget); break;
-      case 'rename': showRename(ctxTarget); break;
-      case 'duplicate': await ProjectManager.duplicate(ctxTarget); render(); break;
-      case 'delete':
-        if (confirm('Bu projeyi silmek istediğinize emin misiniz?')) {
-          await ProjectManager.delete(ctxTarget);
-          render();
-        }
-        break;
-    }
-  });
 
   // Hide context menu on click outside
   document.addEventListener('click', (e) => {

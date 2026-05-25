@@ -4,6 +4,7 @@ function renderSlide() {
   c.style.background = s.background || '#fff';
   document.getElementById('canvas').style.background = s.background || '#fff';
   if (document.activeElement?.closest?.('.canvas-el.text-el[contenteditable]')) return;
+  if (document.activeElement?.closest?.('#panel-body')) return;
   c.innerHTML = '';
   const frag = document.createDocumentFragment();
   s.elements.forEach((el, i) => {
@@ -129,7 +130,7 @@ function showPanel(el) {
   body.innerHTML = html;
   body.querySelectorAll('input,select').forEach(inp => {
     inp.addEventListener('change',()=>{const k=inp.dataset.k;let v=inp.value;if(inp.type==='number')v=parseFloat(v);if(inp.type==='number'&&isNaN(v))return;const e=selEl();if(e)updEl(e.id,{[k]:v});updateToolbar();});
-    inp.addEventListener('input',()=>{if(inp.type!=='color'&&inp.type!=='text')return;const k=inp.dataset.k;let v=inp.value;const e=selEl();if(e)updEl(e.id,{[k]:v});});
+    inp.addEventListener('input',()=>{if(inp.type!=='color')return;const k=inp.dataset.k;let v=inp.value;const e=selEl();if(e)updEl(e.id,{[k]:v});});
   });
 }
 

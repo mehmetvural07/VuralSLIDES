@@ -14,6 +14,11 @@ const ProjectManager = {
     this._loaded = true;
   },
 
+  async reload() {
+    this._loaded = false;
+    await this.init();
+  },
+
   async save() {
     if (window.electronAPI) {
       await window.electronAPI.saveConfig(this.config);
