@@ -69,15 +69,15 @@ async function saveProjectAs() {
 }
 
 async function updateProjectMeta() {
-  if (App.projectId && window.electronAPI?.updateProjectMeta) {
-    await window.electronAPI.updateProjectMeta({ projectId: App.projectId, slideCount: App.slides.length, path: App.path });
+  if (!App.projectId || !window.electronAPI?.updateProjectMeta) return
+  let thumb = null
+  if (window.electronAPI?.generateThumbnail && App.slides.length > 0) {
+    thumb = await window.electronAPI.generateThumbnail(App.slides[0])
   }
-  if (App.projectId && window.electronAPI?.generateThumbnail && App.slides.length > 0) {
-    const thumb = await window.electronAPI.generateThumbnail(App.slides[0]);
-    if (thumb && window.electronAPI.updateProjectMeta) {
-      await window.electronAPI.updateProjectMeta({ projectId: App.projectId, slideCount: App.slides.length, path: App.path, thumbnail: thumb });
-    }
-  }
+  await window.electronAPI.updateProjectMeta({
+    projectId: App.projectId, slideCount: App.slides.length,
+    path: App.path, thumbnail: thumb
+  })
 }
 
 function saveFallback() {

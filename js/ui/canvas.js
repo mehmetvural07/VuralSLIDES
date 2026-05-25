@@ -35,6 +35,12 @@
       updateToolbar();
     }
 
+    if ((e.ctrlKey || e.metaKey) && el.classList.contains('text-el')) {
+      e.preventDefault()
+      startDrag(el, e)
+      return
+    }
+
     if (el.classList.contains('text-el') && el.contentEditable === 'true' && e.target === el) {
       return;
     }

@@ -216,15 +216,27 @@
           if (pmP) pmP.path = filePath;
         }
       }
+      if (window.electronAPI.generateThumbnail && result.slideData.slides?.length) {
+        const thumb = await window.electronAPI.generateThumbnail(result.slideData.slides[0])
+        if (thumb) { result.project.thumbnail = thumb; await ProjectManager.save() }
+      }
       window.electronAPI.openEditor({ ...result.slideData, _projectId: result.project.id, _projectName: result.project.name });
     }
   }
 
   async function openProject(id) {
     const result = await ProjectManager.open(id);
-    if (result && window.electronAPI) {
+    if (!result) return
+    if (!result.project.thumbnail && result.slideData.slides?.length && window.electronAPI?.generateThumbnail) {
+      const thumb = await window.electronAPI.generateThumbnail(result.slideData.slides[0])
+      if (thumb) {
+        result.project.thumbnail = thumb
+        await ProjectManager.save()
+      }
+    }
+    if (window.electronAPI) {
       window.electronAPI.openEditor({ ...result.slideData, _projectId: result.project.id, _projectName: result.project.name });
-    } else if (result) {
+    } else {
       localStorage.setItem('presentationData', JSON.stringify(result.slideData));
       localStorage.setItem('oslide2_currentProject', JSON.stringify(result.project));
       window.location.href = 'editor.html';
