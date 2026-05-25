@@ -19,7 +19,7 @@
       if (favFilterActive) {
         welcome.classList.add('hidden');
         mainView.classList.remove('hidden');
-        grid.innerHTML = '<div class="empty-state"><div class="icon">⭐</div><p>Favori proje yok</p></div>';
+        grid.innerHTML = '<div class="empty-state"><div class="icon">⭐</div><p>' + I18n.t('home.noFavorites') + '</p></div>';
         return;
       }
       welcome.classList.remove('hidden');
@@ -32,7 +32,7 @@
     grid.innerHTML = '';
     const newCard = document.createElement('div');
     newCard.className = 'new-project-card';
-    newCard.innerHTML = '<div class="plus">+</div><div class="label">Yeni Proje</div>';
+    newCard.innerHTML = '<div class="plus">+</div><div class="label">' + I18n.t('home.newProjectCard') + '</div>';
     newCard.onclick = showNewDialog;
     grid.appendChild(newCard);
 
@@ -60,12 +60,12 @@
       const info = document.createElement('div');
       info.className = 'card-info';
       const favIcon = p.favorite ? '⭐ ' : '';
-      info.innerHTML = `<div class="card-name">${favIcon}${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} slide • ${timeAgo(p.lastModified)}</div>`;
+      info.innerHTML = `<div class="card-name">${favIcon}${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} ${I18n.t('project.slide')} • ${timeAgo(p.lastModified)}</div>`;
 
       const delBtn = document.createElement('button');
       delBtn.className = 'card-del-btn';
       delBtn.innerHTML = '<i data-lucide="trash-2"></i>';
-      delBtn.onclick = async (e) => { e.stopPropagation(); if (confirm('Bu projeyi silmek istediğinize emin misiniz?')) { await ProjectManager.delete(p.id); render(); } };
+      delBtn.onclick = async (e) => { e.stopPropagation(); if (confirm(I18n.t('project.deleteConfirm'))) { await ProjectManager.delete(p.id); render(); } };
 
       card.appendChild(starBtn);
       card.appendChild(delBtn);
@@ -78,9 +78,10 @@
       grid.appendChild(card);
     });
 
+    // Recent
     const recentProjects = await ProjectManager.getRecent();
     const recentIds = new Set(recentProjects.map(r => r.id));
-    const recentCards = projects.filter(p => recentIds.has(p.id) && p.id !== projects[projects.length - 1]?.id);
+    const recentCards = projects.filter(p => recentIds.has(p.id) && p.id !== projects[projects.length-1]?.id);
     if (recentCards.length > 0) {
       recent.classList.remove('hidden');
       recentList.innerHTML = '';
@@ -94,7 +95,7 @@
             <div class="recent-name">${esc(p.name)}</div>
             <div class="recent-meta">${timeAgo(p.lastModified)}</div>
           </div>
-          <div class="recent-slides">${p.slideCount || 0} slide</div>
+          <div class="recent-slides">${p.slideCount || 0} ${I18n.t('project.slide')}</div>
         `;
         item.onclick = () => openProject(p.id);
         item.oncontextmenu = (e) => { e.preventDefault(); showCtx(e, p.id); };
@@ -149,7 +150,7 @@
         case 'export': await exportProject(ctxTarget); break;
         case 'favorite': await ProjectManager.toggleFavorite(ctxTarget); render(); break;
         case 'delete':
-          if (confirm('Bu projeyi silmek istediğinize emin misiniz?')) {
+          if (confirm(I18n.t('project.deleteConfirm'))) {
             await ProjectManager.delete(ctxTarget);
             render();
           }

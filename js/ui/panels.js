@@ -23,44 +23,44 @@ function showPanel(el) {
   }
 
   html += '<div class="pg-row">';
-  f('X', 'x', 'n');
-  f('Y', 'y', 'n');
+  f(I18n.t('panel.x'), 'x', 'n');
+  f(I18n.t('panel.y'), 'y', 'n');
   html += '</div><div class="pg-row">';
-  f('W', 'width', 'n', { min: 10 });
-  f('H', 'height', 'n', { min: 10 });
+  f(I18n.t('panel.width'), 'width', 'n', { min: 10 });
+  f(I18n.t('panel.height'), 'height', 'n', { min: 10 });
   html += '</div>';
   html += '<div class="pg-row">';
-  f('Dönüş', 'rotation', 'n', { min: 0, step: 1 });
-  f('Opaklık', 'opacity', 'n', { min: 0, step: 0.1 });
+  f(I18n.t('panel.rotation'), 'rotation', 'n', { min: 0, step: 1 });
+  f(I18n.t('panel.opacity'), 'opacity', 'n', { min: 0, step: 0.1 });
   html += '</div>';
 
   if (el.type === 'text') {
-    f('İçerik', 'content', 't');
-    f('Arkaplan', 'bgColor', 'c');
-    f('Yazı Tipi', 'fontFamily', 's', {
+    f(I18n.t('panel.content'), 'content', 't');
+    f(I18n.t('panel.background'), 'bgColor', 'c');
+    f(I18n.t('panel.fontFamily'), 'fontFamily', 's', {
       options: 'Arial,Helvetica,Georgia,Times New Roman,Courier New,Verdana'.split(',').map(x => ({ v: x, l: x }))
     });
     html += '<div class="pg-row">';
-    f('Boyut', 'fontSize', 'n', { min: 8 });
-    f('Renk', 'color', 'c');
+    f(I18n.t('panel.fontSize'), 'fontSize', 'n', { min: 8 });
+    f(I18n.t('panel.color'), 'color', 'c');
     html += '</div>';
   }
 
   if (el.type === 'rect' || el.type === 'circle') {
     html += '<div class="pg-row">';
-    f('Dolgu', 'fill', 'c');
-    f('Kenar', 'borderColor', 'c');
+    f(I18n.t('panel.fill'), 'fill', 'c');
+    f(I18n.t('panel.border'), 'borderColor', 'c');
     html += '</div><div class="pg-row">';
-    f('Kalınlık', 'borderWidth', 'n', { min: 0 });
-    if (el.type === 'rect') f('Köşe', 'borderRadius', 'n', { min: 0 });
+    f(I18n.t('panel.borderWidth'), 'borderWidth', 'n', { min: 0 });
+    if (el.type === 'rect') f(I18n.t('panel.corner'), 'borderRadius', 'n', { min: 0 });
     html += '</div>';
   }
 
-  if (el.type === 'image') f('Kaynak', 'src', 't');
+  if (el.type === 'image') f(I18n.t('panel.source'), 'src', 't');
   if (el.type === 'arrow') {
     html += '<div class="pg-row">';
-    f('Renk', 'fill', 'c');
-    f('Kalınlık', 'borderWidth', 'n', { min: 1 });
+    f(I18n.t('panel.color'), 'fill', 'c');
+    f(I18n.t('panel.borderWidth'), 'borderWidth', 'n', { min: 1 });
     html += '</div>';
   }
 

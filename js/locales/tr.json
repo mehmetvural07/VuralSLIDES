@@ -73,6 +73,7 @@
   "panel.fontFamily": "Yazı Tipi",
   "panel.fontSize": "Boyut",
   "panel.color": "Renk",
+  "panel.background": "Arkaplan",
 
   "settings.title": "Ayarlar",
   "settings.cancel": "İptal",
@@ -115,6 +116,10 @@
 
   "about.title": "Hakkında",
   "about.desc": "Electron tabanlı modern sunum uygulaması",
+
+  "thumbSize.small": "Küçük",
+  "thumbSize.medium": "Orta",
+  "thumbSize.large": "Büyük",
 
   "presentation.counter": "/",
   "presentation.hint": "Ok tuşları ile gezin • ESC çıkış",

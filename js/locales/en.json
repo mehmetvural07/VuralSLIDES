@@ -73,6 +73,7 @@
   "panel.fontFamily": "Font Family",
   "panel.fontSize": "Font Size",
   "panel.color": "Color",
+  "panel.background": "Background",
 
   "settings.title": "Settings",
   "settings.cancel": "Cancel",
@@ -115,6 +116,10 @@
 
   "about.title": "About",
   "about.desc": "Modern Electron-based presentation app",
+
+  "thumbSize.small": "Small",
+  "thumbSize.medium": "Medium",
+  "thumbSize.large": "Large",
 
   "presentation.counter": "/",
   "presentation.hint": "Arrow keys to navigate • ESC to exit",
