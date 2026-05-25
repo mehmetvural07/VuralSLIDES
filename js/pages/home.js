@@ -127,6 +127,10 @@
     const grid = document.getElementById('themes-grid')
     if (!grid) return
     grid.innerHTML = ''
+    if (themes.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="icon">🎨</div><p>' + I18n.t('home.noThemes') + '</p></div>'
+      return
+    }
     themes.forEach((th, i) => {
       const card = document.createElement('div')
       card.className = 'theme-card2'

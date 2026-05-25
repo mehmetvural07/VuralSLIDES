@@ -153,6 +153,7 @@
 
   "home.themes": "Temalar",
   "home.newTheme": "Yeni Tema",
+  "home.noThemes": "Henüz tema yok. Yeni bir tema oluşturun.",
 
   "theme.default": "Varsayılan",
   "theme.dark": "Karanlık",

@@ -17,6 +17,7 @@ const ProjectManager = {
       const stored = localStorage.getItem('oslide2_config');
       if (stored) try { this.config = JSON.parse(stored); } catch {}
     }
+    if (!this.config.projectThemes) this.config.projectThemes = []
     this._loaded = true;
   },
 

@@ -153,6 +153,7 @@
 
   "home.themes": "Themes",
   "home.newTheme": "New Theme",
+  "home.noThemes": "No themes yet. Create a new theme.",
 
   "theme.default": "Default",
   "theme.dark": "Dark",
