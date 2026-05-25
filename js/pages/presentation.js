@@ -36,6 +36,13 @@
         let css = `left:${sx(el.x)};top:${sy(el.y)};width:${sx(el.width)};height:${sy(el.height)}`;
         if (el.opacity !== undefined && el.opacity < 1) css += `;opacity:${el.opacity}`;
         if (el.rotation) css += `;transform:rotate(${el.rotation}deg)`;
+        if (el.animType && el.animType !== 'none') {
+          const emphasis = ['bounce', 'pulse'].includes(el.animType)
+          d.dataset.anim = (emphasis ? 'emphasis-' : 'entrance-') + el.animType
+          css += `;--anim-name:anim-${el.animType}`
+          if (el.animDuration != null) css += `;--anim-dur:${el.animDuration}s`
+          if (el.animDelay != null) css += `;--anim-delay:${el.animDelay}s`
+        }
         d.style.cssText = css;
         if (el.type === 'text') {
           d.textContent = el.content || '';

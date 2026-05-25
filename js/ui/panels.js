@@ -64,6 +64,15 @@ function showPanel(el) {
     html += '</div>';
   }
 
+  html += '<div class="pg-sep"></div><div class="pg-section-label">' + I18n.t('panel.animation') + '</div>';
+  f(I18n.t('panel.animType'), 'animType', 's', {
+    options: ['none','fade','slide-up','slide-down','slide-left','slide-right','zoom-in','zoom-out','bounce','pulse'].map(x => ({ v: x, l: I18n.t('anim.' + x.replace(/-([a-z])/g, (_, c) => c.toUpperCase())) }))
+  });
+  html += '<div class="pg-row">';
+  f(I18n.t('panel.animDuration'), 'animDuration', 'n', { min: 0.1, step: 0.1 });
+  f(I18n.t('panel.animDelay'), 'animDelay', 'n', { min: 0, step: 0.1 });
+  html += '</div>';
+
   body.innerHTML = html;
   body.querySelectorAll('input,select').forEach(inp => {
     inp.addEventListener('change', () => {
