@@ -315,10 +315,10 @@ function init() {
   (async () => {
     if (window.electronAPI) {
       const cfg = await window.electronAPI.getConfig();
-      I18n.init(cfg.settings?.language || 'tr');
+      await I18n.init(cfg.settings?.language || 'tr');
       if (window.setSnapEnabled) window.setSnapEnabled(cfg.settings?.snapToGrid !== false)
     } else {
-      I18n.init('tr');
+      await I18n.init('tr');
     }
   })();
 

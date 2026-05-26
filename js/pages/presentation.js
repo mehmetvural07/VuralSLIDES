@@ -1,7 +1,8 @@
 (function() {
   let slides = [], cur = 0, timer = null, sec = 0, transDir = 'next'
-  let _noData = 'Veri yok'
-  let _hint = 'Ok tuşları ile gezin • ESC çıkış'
+
+  const _noData = 'Veri yok'
+  const _hint = 'Ok tuşları ile gezin • ESC çıkış'
 
   const themes = {
     default: { bg: '#fff', text: '#222', accent: '#ffd700' },
@@ -10,14 +11,9 @@
     ocean: { bg: '#eef6ff', text: '#002244', accent: '#ddcc00' }
   };
 
-  async function init() {
+  function init() {
     const w = document.getElementById('pres-wrapper');
     if (!w) return;
-
-    const locale = localStorage.getItem('oslide2_locale') || 'tr'
-    await I18n.init(locale)
-    _noData = I18n.t('presentation.noData')
-    _hint = I18n.t('presentation.hint')
 
     if (window.electronAPI?.onPresentationData) { window.electronAPI.onPresentationData(d => load(d)); return; }
     const stored = localStorage.getItem('presentationData');
@@ -204,6 +200,6 @@
   document.addEventListener('wheel', e => { e.deltaY > 0 ? go('next') : go('prev'); }, { passive: true });
   document.addEventListener('click', e => { if (!e.target.closest('#pres-ui')) go('next'); });
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => init());
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

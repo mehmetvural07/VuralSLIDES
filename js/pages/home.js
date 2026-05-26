@@ -671,7 +671,7 @@
     await ProjectManager.init();
     await loadTheme();
     const langSettings = await ProjectManager.getSettings();
-    I18n.init(langSettings.language || 'tr');
+    await I18n.init(langSettings.language || 'tr');
 
     // Init theme cards preview
     document.querySelectorAll('.theme-card').forEach(card => {

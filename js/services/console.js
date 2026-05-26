@@ -62,11 +62,13 @@ const DevConsole = {
   updateState() {
     const el = document.getElementById('dc-state')
     if (!el) return
+    let AppData = {}
+    try { AppData = this.safe(App) } catch {}
     const data = {
-      App: this.safe(App || {}),
+      App: AppData,
       ProjectManager: this.safe(window.ProjectManager?.config || {}),
       I18n: { locale: I18n.locale, loaded: I18n.loaded, keys: Object.keys(I18n.strings).length },
-      ThemeManager: { theme: ThemeManager.theme }
+      ThemeManager: { current: ThemeManager.current }
     }
     el.textContent = JSON.stringify(data, null, 2)
   },
