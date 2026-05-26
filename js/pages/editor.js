@@ -333,6 +333,344 @@ function initShortcuts() {
   });
 }
 
+let aiOpen = false
+let aiMsgs = []
+let aiBusy = false
+
+function renderMD(text) {
+  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  let h = esc
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/^- (.+)$/gm, '• $1')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+  return `<p>${h}</p>`
+}
+
+function initAI() {
+  const overlay = document.getElementById('ai-overlay')
+  const drawer = document.getElementById('ai-drawer')
+  const input = document.getElementById('ai-input')
+  const sendBtn = document.getElementById('ai-send')
+  const toggle = document.getElementById('ai-toggle-btn')
+  const closeBtn = document.getElementById('ai-close-btn')
+  const fullBtn = document.getElementById('ai-fullscreen-btn')
+  const msgsEl = document.getElementById('ai-messages')
+  const typing = document.getElementById('ai-typing')
+
+  function saveHistory() {
+    try { localStorage.setItem('oslide2_ai_msgs', JSON.stringify(aiMsgs)) } catch {}
+  }
+
+  function loadHistory() {
+    try {
+      const saved = localStorage.getItem('oslide2_ai_msgs')
+      if (saved) {
+        aiMsgs = JSON.parse(saved)
+        aiMsgs.forEach(m => {
+          const div = document.createElement('div')
+          div.className = `ai-msg ${m.role}`
+          div.textContent = m.content
+          msgsEl.appendChild(div)
+        })
+        msgsEl.scrollTop = msgsEl.scrollHeight
+        hideWelcome()
+      }
+    } catch {}
+  }
+
+  function buildSlideContext() {
+    return App.slides.map((s, i) => {
+      const lines = s.elements.map(el => {
+        if (el.type === 'title' || el.type === 'text') return `${el.type}: ${el.content || ''}`
+        return ''
+      }).filter(Boolean)
+      return `【Slayt ${i+1}】\n${lines.join('\n')}`
+    }).join('\n\n')
+  }
+
+  function addMsg(role, content) {
+    aiMsgs.push({ role, content })
+    const div = document.createElement('div')
+    div.className = `ai-msg ${role}`
+    div.textContent = content
+    msgsEl.appendChild(div)
+    msgsEl.scrollTop = msgsEl.scrollHeight
+    const welcome = msgsEl.querySelector('.ai-welcome')
+    if (welcome) welcome.style.display = 'none'
+    saveHistory()
+  }
+
+  function hideWelcome() {
+    const w = msgsEl.querySelector('.ai-welcome')
+    if (w) w.style.display = 'none'
+  }
+
+  function agentMsg(icon, text) {
+    hideWelcome()
+    const div = document.createElement('div')
+    div.className = 'ai-msg ai-status'
+    div.innerHTML = `<i data-lucide="${icon}" class="ai-stat-icon"></i> ${text}`
+    msgsEl.appendChild(div)
+    msgsEl.scrollTop = msgsEl.scrollHeight
+    if (window.lucide) lucide.createIcons()
+    return div
+  }
+
+  function replaceMsg(el, icon, text) {
+    el.innerHTML = `<i data-lucide="${icon}" class="ai-stat-icon"></i> ${text}`
+    if (window.lucide) lucide.createIcons()
+    msgsEl.scrollTop = msgsEl.scrollHeight
+  }
+
+  async function typewrite(el, text, speed = 15) {
+    el.className = 'ai-msg assistant'
+    el.textContent = ''
+    msgsEl.appendChild(el)
+    for (let i = 0; i < text.length; i++) {
+      el.textContent += text[i]
+      msgsEl.scrollTop = msgsEl.scrollHeight
+      if (i % 3 === 0) await new Promise(r => setTimeout(r, speed))
+    }
+    el.innerHTML = renderMD(text)
+    el.classList.add('rendered')
+    msgsEl.scrollTop = msgsEl.scrollHeight
+  }
+
+  function isSlideRequest(text) {
+    const tr = /slayt\s*(oluştur|yap|hazırla|üret|ekle)/i
+    const en = /slide\s*(create|make|generate|add)/i
+    const sunum = /sunum\s*(hazırla|yap)/i
+    return tr.test(text) || en.test(text) || sunum.test(text)
+  }
+
+  function extractCount(text) {
+    const m = text.match(/(\d+)\s*(slayt|slide|tane|adet)/i)
+    if (m) return Math.min(Math.max(parseInt(m[1]), 1), 20)
+    const m2 = text.match(/(\d+)/)
+    if (m2) return Math.min(Math.max(parseInt(m2[1]), 1), 20)
+    return 3
+  }
+
+  function extractTopic(text) {
+    return text
+      .replace(/\d+\s*(slayt|slide|tane|adet)\s*/gi, '')
+      .replace(/slayt\s*(oluştur|yap|hazırla|üret|ekle)\s*/gi, '')
+      .replace(/slide\s*(create|make|generate|add)\s*/gi, '')
+      .replace(/sunum\s*(hazırla|yap)\s*/gi, '')
+      .replace(/(bana|lütfen|yapabilir\s*misin)\s*/gi, '')
+      .trim()
+  }
+
+  function addUIMsg(text) {
+    hideWelcome()
+    const div = document.createElement('div')
+    div.className = 'ai-msg ai-ui'
+    div.textContent = text
+    msgsEl.appendChild(div)
+    msgsEl.scrollTop = msgsEl.scrollHeight
+    return div
+  }
+
+  async function send() {
+    const text = input.value.trim()
+    if (!text || aiBusy) return
+
+    if (isSlideRequest(text)) {
+      const count = extractCount(text)
+      const topic = extractTopic(text) || I18n.t('ai.defaultTopic')
+      input.value = ''
+      input.style.height = 'auto'
+      return await genSlides(topic, count)
+    }
+
+    input.value = ''
+    input.style.height = 'auto'
+    addMsg('user', text)
+    aiBusy = true
+    hideWelcome()
+
+    const status = agentMsg('search', 'Düşünülüyor...')
+    typing.classList.remove('hidden')
+    try {
+      const ctx = buildSlideContext()
+      const msgs = aiMsgs.slice(-8).map(m => ({ role: m.role, content: m.content }))
+      if (ctx) msgs.unshift({ role: 'system', content: `Şu anki sunum:\n${ctx}` })
+      replaceMsg(status, 'brain', 'Analiz ediliyor...')
+      const r = await AI.chat(msgs)
+      status.remove()
+      const el = document.createElement('div')
+      await typewrite(el, r)
+    } catch (e) {
+      replaceMsg(status, 'alert-triangle', I18n.t('ai.error') + ': ' + e.message)
+      status.className = 'ai-msg err'
+    }
+    aiBusy = false
+    typing.classList.add('hidden')
+  }
+
+  async function genSlides(topic, count) {
+    if (aiBusy) return
+    const c = count || extractCount(input.value.trim()) || 3
+    const t = topic || input.value.trim() || I18n.t('ai.defaultTopic')
+    input.value = ''
+    aiBusy = true
+
+    const steps = [agentMsg('layers', 'Slaytlar oluşturuluyor...')]
+    await new Promise(r => setTimeout(r, 200))
+    replaceMsg(steps[0], 'pen-tool', 'AI çalışıyor...')
+    await new Promise(r => setTimeout(r, 200))
+
+    typing.classList.remove('hidden')
+    try {
+      const ctx = buildSlideContext()
+      const slides = await AI.generateSlides(t, c, ctx)
+      steps[0].remove()
+
+      if (slides?.length) {
+        const th = App.projectTheme
+        const bg = th?.canvasBg || '#ffffff'
+        const tc = th?.titleColor || '#222'
+        const tf = th?.titleFont || 'Arial'
+        const mc = th?.textColor || '#444'
+        const mf = th?.textFont || 'Arial'
+
+        slides.forEach(s => {
+          save()
+          const els = []
+          const slideW = 960
+          const margin = 60
+          const contentW = slideW - margin * 2
+
+          els.push({
+            id: id(), type: 'title', content: s.title || '',
+            x: margin, y: 40, width: contentW, height: 65,
+            fontSize: 40, fontFamily: tf, color: tc,
+            bold: true, textAlign: 'center',
+            italic: false, underline: false, strikethrough: false,
+            bgColor: '', opacity: 1, rotation: 0,
+          })
+
+          const bullets = Array.isArray(s.bullets) ? s.bullets : []
+          const startY = 125
+          const lineH = 38
+          bullets.forEach((b, i) => {
+            els.push({
+              id: id(), type: 'text',
+              content: `•  ${b}`,
+              x: margin + 10, y: startY + i * lineH,
+              width: contentW - 20, height: 34,
+              fontSize: 20, fontFamily: mf, color: mc,
+              bold: false, italic: false, underline: false,
+              strikethrough: false, textAlign: 'left',
+              bgColor: '', opacity: 1, rotation: 0,
+            })
+          })
+
+          App.slides.push({ id: id(), background: bg, elements: els })
+        })
+        renderAll()
+        renderThumbs()
+        const ok = agentMsg('check-circle', `${slides.length} slayt oluşturuldu`)
+        await new Promise(r => setTimeout(r, 1500))
+        ok.remove()
+      } else {
+        const w = agentMsg('alert-triangle', 'Slayt oluşturulamadı')
+        await new Promise(r => setTimeout(r, 2000))
+        w.remove()
+      }
+    } catch (e) {
+      steps[0]?.remove()
+      const w = agentMsg('alert-triangle', I18n.t('ai.error'))
+      await new Promise(r => setTimeout(r, 2000))
+      w.remove()
+    }
+    aiBusy = false
+    typing.classList.add('hidden')
+  }
+
+  async function smartAction(action) {
+    const el = selEl()
+    if (!el || !el.content) return
+    const meta = {
+      improve: { icon: 'sparkles', label: 'Düzeltiliyor...', prompt: I18n.t('ai.improvePrompt') },
+      summarize: { icon: 'align-left', label: 'Özetleniyor...', prompt: I18n.t('ai.summarizePrompt') },
+      'translate-en': { icon: 'languages', label: 'Çevriliyor...', prompt: I18n.t('ai.translateEnPrompt') },
+    }
+    const m = meta[action] || { icon: 'refresh-cw', label: 'İşleniyor...', prompt: action }
+    aiBusy = true
+    hideWelcome()
+
+    addMsg('user', `"${el.content.slice(0, 60)}..."`)
+    const status = agentMsg(m.icon, m.label)
+    typing.classList.remove('hidden')
+    try {
+      const ctx = buildSlideContext()
+      replaceMsg(status, 'brain', 'İçerik analiz ediliyor...')
+      const r = await AI.improveTextWithContext(el.content, m.prompt, ctx)
+      status.remove()
+      if (r) {
+        save()
+        updEl(el.id, { content: r })
+        renderAll()
+        const elDiv = document.createElement('div')
+        await typewrite(elDiv, r)
+      }
+    } catch (e) {
+      replaceMsg(status, 'alert-triangle', I18n.t('ai.error') + ': ' + e.message)
+      status.className = 'ai-msg err'
+    }
+    aiBusy = false
+    typing.classList.add('hidden')
+  }
+
+  loadHistory()
+
+  sendBtn?.addEventListener('click', send)
+  input?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+  })
+  input?.addEventListener('input', () => {
+    input.style.height = 'auto'
+    input.style.height = Math.min(input.scrollHeight, 80) + 'px'
+  })
+
+  function closeAI() {
+    aiOpen = false
+    overlay.classList.add('hidden')
+    toggle.classList.remove('active')
+    drawer.classList.remove('ai-fullscreen')
+    if (fullBtn) fullBtn.innerHTML = '<i data-lucide="maximize"></i>'
+    if (window.lucide) lucide.createIcons()
+  }
+
+  fullBtn?.addEventListener('click', () => {
+    const fs = drawer.classList.toggle('ai-fullscreen')
+    fullBtn.innerHTML = fs ? '<i data-lucide="minimize"></i>' : '<i data-lucide="maximize"></i>'
+    if (window.lucide) lucide.createIcons()
+    msgsEl.scrollTop = msgsEl.scrollHeight
+  })
+
+  toggle?.addEventListener('click', () => {
+    aiOpen = !aiOpen
+    overlay.classList.toggle('hidden', !aiOpen)
+    toggle.classList.toggle('active', aiOpen)
+    if (aiOpen) setTimeout(() => input?.focus(), 100)
+  })
+  closeBtn?.addEventListener('click', closeAI)
+  overlay?.addEventListener('click', e => { if (e.target === overlay) closeAI() })
+
+  document.querySelector('[data-ai-slide]')?.addEventListener('click', genSlides)
+  document.querySelectorAll('[data-ai-action]').forEach(btn => {
+    btn.addEventListener('click', () => smartAction(btn.dataset.aiAction))
+  })
+}
+
 function init() {
   loadTheme();
   (async () => {
@@ -407,6 +745,10 @@ function init() {
   });
 
   if (window.lucide) lucide.createIcons();
+
+  // AI init
+  initAI()
+  ;(async () => { if (window.AI) await AI.init() })()
 
   // Settings panel
   document.getElementById('editor-settings-btn')?.addEventListener('click', () => openSettings());

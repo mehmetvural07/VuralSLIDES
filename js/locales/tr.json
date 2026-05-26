@@ -216,5 +216,21 @@
   "lang.en": "English",
 
   "toolbar.theme": "Tema",
-  "toolbar.edit": "Düzenle"
+  "toolbar.edit": "Düzenle",
+
+  "ai.title": "AI Asistan",
+  "ai.welcome": "AI asistanına soru sor veya slayt üret.",
+  "ai.send": "Gönder",
+  "ai.placeholder": "AI'ya bir şey sor...",
+  "ai.generateSlide": "Slayt Üret",
+  "ai.improve": "Düzelt",
+  "ai.summarize": "Özetle",
+  "ai.translate": "Çevir",
+  "ai.improvePrompt": "Bu metni düzelt, daha iyi hale getir:",
+  "ai.summarizePrompt": "Bu metni özetle, kısa ve öz ol:",
+  "ai.translateEnPrompt": "Bu metni İngilizce'ye çevir:",
+  "ai.actionLabel": "AI işlemi",
+  "ai.defaultTopic": "Sunum konusu",
+  "ai.thinking": "Düşünüyor...",
+  "ai.error": "AI hatası"
 }

@@ -26,7 +26,12 @@ function getDefaultConfig() {
     snapToGrid: false, gridSize: 20,
     defaultFontFamily: 'Arial', defaultFontSize: 16,
     canvasBg: '#1a1a1a', autoOpenPanel: true, thumbSize: 'medium'
-  }, projectThemes: getDefaultThemes() }
+  }, projectThemes: getDefaultThemes(),   ai: {
+    endpoint: 'https://g4f.space/api/groq/chat/completions',
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.7,
+    maxTokens: 4096
+  } }
 }
 
 function getDefaultThemes() {

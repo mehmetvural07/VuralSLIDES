@@ -57,6 +57,7 @@
       <div class="topbar-right">
         <button class="tb-btn" id="editor-theme-btn" data-i18n-attr="title:toolbar.theme"><i data-lucide="palette"></i></button>
         <button class="tb-btn" id="editor-settings-btn" data-i18n-attr="title:toolbar.settings"><i data-lucide="settings"></i></button>
+        <button class="tb-btn" id="ai-toggle-btn" title="AI"><i data-lucide="bot"></i></button>
         <button class="tb-btn accent" data-action="start-presentation" data-i18n-attr="title:toolbar.presentation"><i data-lucide="play"></i></button>
       </div>
     </header>
@@ -87,6 +88,37 @@
         </div>
         <div id="panel-body"></div>
       </aside>
+    </div>
+
+    <div id="ai-overlay" class="hidden">
+      <div id="ai-drawer">
+        <div class="ai-header">
+          <div class="ai-h-left">
+            <i data-lucide="bot" class="ai-icon"></i>
+            <span class="ai-label">AI</span>
+          </div>
+          <div class="ai-h-actions">
+            <button class="ai-chip" data-ai-slide><i data-lucide="layers"></i> <span data-i18n="ai.generateSlide">Slayt Üret</span></button>
+            <button class="ai-close-btn" id="ai-fullscreen-btn" title="Tam Ekran"><i data-lucide="maximize"></i></button>
+            <button class="ai-close-btn" id="ai-close-btn" title="Kapat"><i data-lucide="x"></i></button>
+          </div>
+        </div>
+        <div class="ai-body">
+          <div id="ai-messages"><div class="ai-welcome"><span data-i18n="ai.welcome">AI asistanına soru sor veya slayt üret.</span></div></div>
+          <div id="ai-typing" class="hidden"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></div>
+        </div>
+        <div class="ai-foot">
+          <div class="ai-chips">
+            <button class="ai-chip" data-ai-action="improve"><i data-lucide="sparkles"></i> <span data-i18n="ai.improve">Düzelt</span></button>
+            <button class="ai-chip" data-ai-action="summarize"><i data-lucide="align-left"></i> <span data-i18n="ai.summarize">Özetle</span></button>
+            <button class="ai-chip" data-ai-action="translate-en"><i data-lucide="languages"></i> EN</button>
+          </div>
+          <div class="ai-input-row">
+            <textarea id="ai-input" rows="1" placeholder="AI'ya bir şey sor..."></textarea>
+            <button id="ai-send" class="ai-send-btn"><i data-lucide="send"></i></button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="slide-bg-bar">
@@ -231,6 +263,7 @@
   <script src="js/services/shortcuts.js"></script>
   <script src="js/services/i18n.js"></script>
   <script src="js/services/projectManager.js"></script>
+  <script src="js/services/ai.js"></script>
   <script src="js/core/state.js"></script>
   <script src="js/core/actions.js"></script>
   <script src="js/ui/renderer.js"></script>

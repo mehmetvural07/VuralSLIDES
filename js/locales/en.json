@@ -216,5 +216,21 @@
   "lang.en": "English",
 
   "toolbar.theme": "Theme",
-  "toolbar.edit": "Edit"
+  "toolbar.edit": "Edit",
+
+  "ai.title": "AI Assistant",
+  "ai.welcome": "Ask the AI assistant or generate slides.",
+  "ai.send": "Send",
+  "ai.placeholder": "Ask AI something...",
+  "ai.generateSlide": "Generate Slide",
+  "ai.improve": "Improve",
+  "ai.summarize": "Summarize",
+  "ai.translate": "Translate",
+  "ai.improvePrompt": "Improve this text, make it better:",
+  "ai.summarizePrompt": "Summarize this text, be concise:",
+  "ai.translateEnPrompt": "Translate this text to English:",
+  "ai.actionLabel": "AI action",
+  "ai.defaultTopic": "Presentation topic",
+  "ai.thinking": "Thinking...",
+  "ai.error": "AI error"
 }
