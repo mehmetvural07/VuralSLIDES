@@ -1,6 +1,6 @@
 {
   "app.name": "oSlide2",
-  "app.version": "v0.0.1",
+  "app.version": "v0.2.0",
 
   "home.title": "oSlide2'ye Hoş Geldiniz",
   "home.subtitle": "Yeni bir sunum oluşturun veya mevcut projeyi açın.",
@@ -14,6 +14,7 @@
   "home.noProjects": "Henüz proje yok",
   "home.noFavorites": "Favori proje yok",
   "home.noResults": "Sonuç bulunamadı",
+  "home.allProjects": "Tüm Projeler",
   "home.newProjectCard": "Yeni Proje",
 
   "project.new": "Yeni Proje",

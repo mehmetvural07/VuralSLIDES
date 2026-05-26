@@ -1,10 +1,12 @@
 {
   "name": "oslide2",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Slide presentation app",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "installer": "electron installer_app/main.js",
+    "build:installer": "npx electron-builder --projectDir=installer_app --config=electron-builder.json",
     "build": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,8 +24,7 @@
     ],
     "win": {
       "target": "portable",
-      "icon": "assets/icon.png",
-      "cscLink": "assets/cert.pfx"
+      "icon": "assets/icon.png"
     }
   },
   "keywords": [],

@@ -1,5 +1,8 @@
 node_modules/
 dist/
+installer_app/
+installer/
+dist-installer/
 *.log
 .DS_Store
 assets/cert.pfx

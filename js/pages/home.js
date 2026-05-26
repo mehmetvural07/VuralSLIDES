@@ -1,36 +1,48 @@
 (function() {
   let ctxTarget = null;
-  let favFilterActive = false;
   let settingsCache = {};
-  let activeTab = 'projects';
+  let activeSection = 'home';
   let themes = [];
   let editingThemeId = null;
 
   async function render() {
-    const projects = favFilterActive
-      ? await ProjectManager.getFavorites()
-      : await ProjectManager.getAll();
+    const projects = await ProjectManager.getAll();
     const welcome = document.getElementById('welcome');
-    const mainView = document.getElementById('page-projects');
+    const projectsSection = document.getElementById('projects-section');
+    const themesSection = document.getElementById('themes-section');
     const grid = document.getElementById('projects-grid');
-    const recent = document.getElementById('recent-section');
-    const recentList = document.getElementById('recent-list');
-    const favBtn = document.getElementById('fav-filter-btn');
-    if (favBtn) favBtn.classList.toggle('active', favFilterActive);
+    const list = document.getElementById('project-list');
+
+    document.querySelectorAll('#themes-section, #projects-section, #welcome').forEach(el => el.classList.add('hidden'));
+
+    if (activeSection === 'themes') {
+      themesSection.classList.remove('hidden');
+      renderThemes();
+      return
+    }
+
+    projectsSection.classList.remove('hidden');
 
     if (projects.length === 0) {
-      if (favFilterActive) {
-        welcome.classList.add('hidden');
-        mainView.classList.remove('hidden');
-        grid.innerHTML = '<div class="empty-state"><div class="icon">⭐</div><p>' + I18n.t('home.noFavorites') + '</p></div>';
-        return;
-      }
-      welcome.classList.remove('hidden');
-      mainView.classList.add('hidden');
-      return;
+      welcome.classList.remove('hidden')
+      projectsSection.classList.add('hidden')
+      return
     }
-    welcome.classList.add('hidden');
-    mainView.classList.remove('hidden');
+
+    let filtered = projects
+    if (activeSection === 'favorites') filtered = projects.filter(p => p.favorite)
+    else if (activeSection === 'recent') {
+      const recent = await ProjectManager.getRecent()
+      const recentIds = new Set(recent.map(r => r.id))
+      filtered = projects.filter(p => recentIds.has(p.id))
+    }
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="icon">' + (activeSection === 'favorites' ? '⭐' : '') + '</div><p>' + I18n.t('home.noFavorites') + '</p></div>'
+      list.innerHTML = ''
+      if (window.lucide) lucide.createIcons();
+      return
+    }
 
     grid.innerHTML = '';
     const newCard = document.createElement('div');
@@ -39,10 +51,10 @@
     newCard.onclick = showNewDialog;
     grid.appendChild(newCard);
 
-    projects.forEach((p, i) => {
+    filtered.forEach((p, i) => {
       const card = document.createElement('div');
       card.className = 'project-card';
-      card.style.animationDelay = (i * 0.05) + 's';
+      card.style.animationDelay = (i * 0.04) + 's';
       card.dataset.id = p.id;
 
       const starBtn = document.createElement('button');
@@ -50,30 +62,30 @@
       starBtn.innerHTML = '<i data-lucide="star"></i>';
       starBtn.onclick = async (e) => { e.stopPropagation(); await ProjectManager.toggleFavorite(p.id); render(); };
 
-      const thumb = document.createElement('div');
-      thumb.className = 'card-thumb';
-      if (p.thumbnail) {
-        const img = document.createElement('img');
-        img.src = p.thumbnail;
-        thumb.appendChild(img);
-      } else {
-        thumb.textContent = '📄';
-      }
-
-      const info = document.createElement('div');
-      info.className = 'card-info';
-      const favIcon = p.favorite ? '⭐ ' : '';
-      info.innerHTML = `<div class="card-name">${favIcon}${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} ${I18n.t('project.slide')} • ${timeAgo(p.lastModified)}</div>`;
-
       const delBtn = document.createElement('button');
       delBtn.className = 'card-del-btn';
       delBtn.innerHTML = '<i data-lucide="trash-2"></i>';
       delBtn.onclick = async (e) => { e.stopPropagation(); if (confirm(I18n.t('project.deleteConfirm'))) { await ProjectManager.delete(p.id); render(); } };
 
+      const thumbArea = document.createElement('div');
+      thumbArea.className = 'card-thumb-area';
+      if (p.thumbnail) {
+        const img = document.createElement('img');
+        img.src = p.thumbnail;
+        thumbArea.appendChild(img);
+      } else {
+        thumbArea.textContent = '📄';
+      }
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      const favIcon = p.favorite ? '⭐ ' : '';
+      body.innerHTML = `<div class="card-name">${favIcon}${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} ${I18n.t('project.slide')} • ${timeAgo(p.lastModified)}</div>`;
+
       card.appendChild(starBtn);
       card.appendChild(delBtn);
-      card.appendChild(thumb);
-      card.appendChild(info);
+      card.appendChild(thumbArea);
+      card.appendChild(body);
 
       card.onclick = () => openProject(p.id);
       card.oncontextmenu = (e) => { e.preventDefault(); showCtx(e, p.id); };
@@ -81,32 +93,54 @@
       grid.appendChild(card);
     });
 
-    // Recent
-    const recentProjects = await ProjectManager.getRecent();
-    const recentIds = new Set(recentProjects.map(r => r.id));
-    const recentCards = projects.filter(p => recentIds.has(p.id) && p.id !== projects[projects.length-1]?.id);
-    if (recentCards.length > 0) {
-      recent.classList.remove('hidden');
-      recentList.innerHTML = '';
-      recentCards.slice(0, 5).forEach(p => {
+    // List view below grid
+    list.innerHTML = '';
+    if (filtered.length > 4) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = I18n.t('home.allProjects') || 'Tüm Projeler';
+      list.appendChild(label);
+
+      filtered.forEach((p) => {
         const item = document.createElement('div');
-        item.className = 'recent-item';
+        item.className = 'list-item';
         item.dataset.id = p.id;
-        item.innerHTML = `
-          <div class="recent-thumb">${p.thumbnail ? `<img src="${p.thumbnail}" />` : '📄'}</div>
-          <div class="recent-info">
-            <div class="recent-name">${esc(p.name)}</div>
-            <div class="recent-meta">${timeAgo(p.lastModified)}</div>
-          </div>
-          <div class="recent-slides">${p.slideCount || 0} ${I18n.t('project.slide')}</div>
-        `;
-        item.onclick = () => openProject(p.id);
+
+        const listThumb = document.createElement('div');
+        listThumb.className = 'list-thumb';
+        if (p.thumbnail) {
+          const img = document.createElement('img');
+          img.src = p.thumbnail;
+          listThumb.appendChild(img);
+        } else {
+          listThumb.textContent = '📄';
+        }
+
+        const info = document.createElement('div');
+        info.className = 'list-info';
+        info.innerHTML = `<div class="list-name">${esc(p.name)}</div><div class="list-meta">${timeAgo(p.lastModified)}</div>`;
+
+        const slides = document.createElement('div');
+        slides.className = 'list-slides';
+        slides.textContent = `${p.slideCount || 0} ${I18n.t('project.slide')}`;
+
+        item.appendChild(listThumb);
+        item.appendChild(info);
+        if (p.favorite) {
+          const fav = document.createElement('i');
+          fav.setAttribute('data-lucide', 'star');
+          fav.className = 'list-fav';
+          item.appendChild(fav);
+        }
+        item.appendChild(slides);
+
+        item.ondblclick = () => openProject(p.id);
         item.oncontextmenu = (e) => { e.preventDefault(); showCtx(e, p.id); };
-        recentList.appendChild(item);
+
+        list.appendChild(item);
       });
-    } else {
-      recent.classList.add('hidden');
     }
+
     if (window.lucide) lucide.createIcons();
   }
 
@@ -178,16 +212,12 @@
     if (window.lucide) lucide.createIcons()
   }
 
-  function switchTab(tab) {
-    activeTab = tab
-    document.querySelectorAll('.page-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab))
-    document.querySelectorAll('.page-content').forEach(c => c.classList.toggle('active', c.id === 'page-' + tab))
-    if (tab === 'themes') {
-      document.getElementById('welcome')?.classList.add('hidden')
-      renderThemes()
-    } else {
-      render()
-    }
+  function switchSection(section) {
+    activeSection = section
+    document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+      item.classList.toggle('active', item.dataset.section === section)
+    })
+    render()
   }
 
   async function openThemeEditor(id) {
@@ -272,7 +302,6 @@
     document.getElementById('new-project-btn')?.addEventListener('click', showNewDialog);
     document.getElementById('welcome-new-btn')?.addEventListener('click', showNewDialog);
 
-    document.getElementById('open-file-btn')?.addEventListener('click', openFileDialog);
     document.getElementById('welcome-open-btn')?.addEventListener('click', openFileDialog);
 
     document.getElementById('search-input')?.addEventListener('input', async (e) => {
@@ -281,6 +310,18 @@
       const results = await ProjectManager.search(q);
       renderSearchResults(results);
     });
+
+    // Sidebar nav
+    document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+      item.addEventListener('click', () => switchSection(item.dataset.section))
+    });
+
+    document.getElementById('sidebar-new-theme')?.addEventListener('click', () => {
+      switchSection('themes')
+      setTimeout(() => openThemeEditor(null), 50)
+    });
+
+    document.getElementById('sidebar-settings')?.addEventListener('click', openSettings);
 
     document.getElementById('dialog-close')?.addEventListener('click', closeDialog);
     document.getElementById('dialog-cancel')?.addEventListener('click', closeDialog);
@@ -291,29 +332,6 @@
     document.getElementById('rename-cancel')?.addEventListener('click', closeRename);
     document.getElementById('rename-confirm')?.addEventListener('click', confirmRename);
     document.getElementById('rename-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') confirmRename(); });
-
-    document.getElementById('fav-filter-btn')?.addEventListener('click', () => {
-      favFilterActive = !favFilterActive;
-      render();
-    });
-
-    document.getElementById('import-file-btn')?.addEventListener('click', importProject);
-
-    document.querySelectorAll('.page-tab').forEach(tab => {
-      tab.addEventListener('click', () => switchTab(tab.dataset.tab))
-    })
-
-    document.getElementById('new-theme-btn')?.addEventListener('click', () => openThemeEditor(null))
-    document.getElementById('theme-dlg-close')?.addEventListener('click', closeThemeEditor)
-    document.getElementById('theme-dlg-cancel')?.addEventListener('click', closeThemeEditor)
-    document.getElementById('theme-dlg-save')?.addEventListener('click', saveTheme)
-    document.getElementById('theme-dlg-delete')?.addEventListener('click', async () => {
-      if (editingThemeId) await deleteTheme(editingThemeId)
-    })
-    document.querySelectorAll('#theme-dlg-body input, #theme-dlg-body select').forEach(el => {
-      el.addEventListener('input', updateThemePreview)
-      el.addEventListener('change', updateThemePreview)
-    })
 
     document.getElementById('ctx-menu')?.addEventListener('click', async (e) => {
       const item = e.target.closest('.ctx-item');
@@ -327,13 +345,22 @@
         case 'export': await exportProject(ctxTarget); break;
         case 'favorite': await ProjectManager.toggleFavorite(ctxTarget); render(); break;
         case 'delete':
-          if (confirm(I18n.t('project.deleteConfirm'))) {
-            await ProjectManager.delete(ctxTarget);
-            render();
-          }
+          if (confirm(I18n.t('project.deleteConfirm'))) { await ProjectManager.delete(ctxTarget); render(); }
           break;
       }
     });
+
+    document.getElementById('new-theme-btn')?.addEventListener('click', () => openThemeEditor(null))
+    document.getElementById('theme-dlg-close')?.addEventListener('click', closeThemeEditor)
+    document.getElementById('theme-dlg-cancel')?.addEventListener('click', closeThemeEditor)
+    document.getElementById('theme-dlg-save')?.addEventListener('click', saveTheme)
+    document.getElementById('theme-dlg-delete')?.addEventListener('click', async () => {
+      if (editingThemeId) await deleteTheme(editingThemeId)
+    })
+    document.querySelectorAll('#theme-dlg-body input, #theme-dlg-body select').forEach(el => {
+      el.addEventListener('input', updateThemePreview)
+      el.addEventListener('change', updateThemePreview)
+    })
 
     document.getElementById('settings-btn')?.addEventListener('click', openSettings);
     document.getElementById('settings-close')?.addEventListener('click', closeSettings);
@@ -521,31 +548,10 @@
     }
   }
 
-  async function importProject() {
-    if (!window.electronAPI?.importProject) return;
-    const result = await window.electronAPI.importProject();
-    if (!result || !result.slideData) return;
-    const fileName = result.filePath.split(/[/\\]/).pop().replace('.slidelab', '');
-    const created = await ProjectManager.create(fileName);
-    if (!created) return;
-    const pmP = ProjectManager.config.projects.find(pr => pr.id === created.project.id);
-    if (pmP) {
-      if (window.electronAPI.createProjectFile) {
-        const filePath = await window.electronAPI.createProjectFile({
-          projectId: created.project.id,
-          name: fileName,
-          slideData: result.slideData
-        });
-        if (filePath) pmP.path = filePath;
-      }
-    }
-    render();
-  }
-
   function renderSearchResults(results) {
     const grid = document.getElementById('projects-grid');
-    const recent = document.getElementById('recent-section');
-    recent.classList.add('hidden');
+    const list = document.getElementById('project-list');
+    list.innerHTML = '';
     grid.innerHTML = '';
     if (results.length === 0) {
       grid.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>' + I18n.t('home.noResults') + '</p></div>';
@@ -562,24 +568,24 @@
       starBtn.innerHTML = '<i data-lucide="star"></i>';
       starBtn.onclick = async (e) => { e.stopPropagation(); await ProjectManager.toggleFavorite(p.id); renderSearchResults(await ProjectManager.search(document.getElementById('search-input').value.trim())); };
 
-      const thumb = document.createElement('div');
-      thumb.className = 'card-thumb';
+      const thumbArea = document.createElement('div');
+      thumbArea.className = 'card-thumb-area';
       if (p.thumbnail) {
         const img = document.createElement('img');
         img.src = p.thumbnail;
-        thumb.appendChild(img);
+        thumbArea.appendChild(img);
       } else {
-        thumb.textContent = '📄';
+        thumbArea.textContent = '📄';
       }
 
-      const info = document.createElement('div');
-      info.className = 'card-info';
+      const body = document.createElement('div');
+      body.className = 'card-body';
       const favIcon = p.favorite ? '⭐ ' : '';
-      info.innerHTML = `<div class="card-name">${favIcon}${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} ${I18n.t('project.slide')} • ${timeAgo(p.lastModified)}</div>`;
+      body.innerHTML = `<div class="card-name">${favIcon}${esc(p.name)}</div><div class="card-meta">${p.slideCount || 0} ${I18n.t('project.slide')} • ${timeAgo(p.lastModified)}</div>`;
 
       card.appendChild(starBtn);
-      card.appendChild(thumb);
-      card.appendChild(info);
+      card.appendChild(thumbArea);
+      card.appendChild(body);
 
       card.onclick = () => openProject(p.id);
       card.oncontextmenu = (ev) => { ev.preventDefault(); showCtx(ev, p.id); };
@@ -606,7 +612,6 @@
 
     document.getElementById('settings-overlay').classList.remove('hidden');
 
-    // Set theme cards
     const themeCards = document.querySelectorAll('.theme-card');
     themeCards.forEach(card => {
       card.classList.toggle('active', card.dataset.theme === settings.theme);
@@ -673,7 +678,6 @@
     const langSettings = await ProjectManager.getSettings();
     await I18n.init(langSettings.language || 'tr');
 
-    // Init theme cards preview
     document.querySelectorAll('.theme-card').forEach(card => {
       card.addEventListener('click', () => {
         document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
@@ -685,11 +689,8 @@
     render();
     bindEvents();
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { closeDialog(); closeRename(); hideCtx(); closeSettings(); }
-      if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
-        const idx = parseInt(e.key) - 1;
-        openRecentByIndex(idx);
-      }
+      if (e.key === 'Escape') { closeDialog(); closeRename(); hideCtx(); closeSettings(); if (closeThemeEditor) closeThemeEditor(); }
+      if (e.ctrlKey && e.key >= '1' && e.key <= '9') { const idx = parseInt(e.key) - 1; openRecentByIndex(idx); }
     });
   }
 

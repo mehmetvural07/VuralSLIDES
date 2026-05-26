@@ -21,6 +21,7 @@ function renderSlide() {
     frag.appendChild(d);
   });
   c.appendChild(frag);
+  if (window.updateStatusBar) window.updateStatusBar();
 }
 
 function renderEl(d, el) {
@@ -171,6 +172,7 @@ function renderAll() {
   updateToolbar();
   const bgInput = document.getElementById('slide-bg-color');
   if (bgInput) bgInput.value = slide()?.background || '#ffffff';
+  if (window.updateStatusBar) window.updateStatusBar();
 }
 
 function updateToolbar() {

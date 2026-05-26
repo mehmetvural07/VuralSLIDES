@@ -57,6 +57,7 @@ function newProject() {
   startAutoSave();
   renderAll();
   hidePanel();
+  updateStatusBar()
 }
 
 function getData() {
@@ -72,6 +73,7 @@ function loadData(d) {
   App.dirty = false;
   renderAll();
   hidePanel();
+  updateStatusBar()
 }
 
 async function saveProject() {
@@ -80,13 +82,14 @@ async function saveProject() {
   const result = await window.electronAPI.saveFile(getData(), App.path);
   if (result) App.path = result;
   App.dirty = false;
+  updateStatusBar()
   await updateProjectMeta();
 }
 
 async function saveProjectAs() {
   if (!window.electronAPI) return saveFallback();
   const r = await window.electronAPI.saveFileAs(getData());
-  if (r) { App.path = r; App.dirty = false; await updateProjectMeta(); }
+  if (r) { App.path = r; App.dirty = false; updateStatusBar(); await updateProjectMeta(); }
 }
 
 async function updateProjectMeta() {
@@ -176,7 +179,21 @@ function loadProjectData(d) {
   if (d._projectPath) App.path = d._projectPath;
   const name = d._projectName || I18n.t('editor.untitled');
   document.title = `oSlide2 - ${name}`;
+  const fn = document.getElementById('tb-filename')
+  if (fn) fn.textContent = name
+  updateStatusBar()
   startAutoSave();
+}
+
+function updateStatusBar() {
+  const saveEl = document.getElementById('sb-save-status')
+  if (saveEl) saveEl.textContent = App.dirty ? 'Kaydedilmedi' : 'Kaydedildi'
+  const dot = document.querySelector('#status-bar .sb-dot')
+  if (dot) dot.style.background = App.dirty ? '#ff4757' : '#1D9E75'
+  const slideEl = document.getElementById('sb-slide-info')
+  if (slideEl) slideEl.textContent = `Slayt ${App.cur + 1}`
+  const elEl = document.getElementById('sb-element-info')
+  if (elEl) elEl.textContent = App.sel ? 'Öğe seçili' : 'Seçili öğe yok'
 }
 
 function setSettingField(id, value) {
@@ -378,6 +395,25 @@ function init() {
     if (s) { save(); s.background = bgs[App.theme] || '#fff'; document.getElementById('slide-bg-color').value = s.background; renderSlide(); renderThumbs(); }
   });
 
+  // Zoom
+  let zoomLevel = 1
+  function applyZoom() {
+    const canvas = document.getElementById('canvas')
+    if (!canvas) return
+    const val = document.getElementById('zoom-value')
+    if (val) val.textContent = Math.round(zoomLevel * 100) + '%'
+    canvas.style.transform = `scale(${zoomLevel})`
+    canvas.style.transformOrigin = 'center center'
+  }
+  document.getElementById('zoom-in')?.addEventListener('click', () => {
+    zoomLevel = Math.min(3, +(zoomLevel + 0.1).toFixed(1))
+    applyZoom()
+  })
+  document.getElementById('zoom-out')?.addEventListener('click', () => {
+    zoomLevel = Math.max(0.25, +(zoomLevel - 0.1).toFixed(1))
+    applyZoom()
+  })
+
   if (window.lucide) lucide.createIcons();
 
   // AI init
@@ -521,6 +557,7 @@ window.startPresentation = startPresentation;
 window.exportPDF = exportPDF;
 window.exportPNG = exportPNG;
 window.loadProjectData = loadProjectData;
+window.updateStatusBar = updateStatusBar;
 window.showThemePicker = showThemePicker;
 window.closeThemePicker = closeThemePicker;
 window.openSettings = openSettings;

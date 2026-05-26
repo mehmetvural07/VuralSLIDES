@@ -14,17 +14,31 @@
 <body>
   <div id="app">
     <header id="topbar">
-      <div class="topbar-left">
+      <div class="tb-logo-group">
+        <div class="tb-logo-mark">O</div>
+        <span class="tb-logo-name">oSlide2</span>
+        <div class="sep-v"></div>
         <button class="tb-btn" id="home-btn"><i data-lucide="arrow-left"></i></button>
-        <span class="logo">oSlide2</span>
-        <span class="sep"></span>
+        <span id="tb-filename"></span>
+      </div>
+
+      <div class="tb-history-group">
+        <button class="tb-btn" id="tb-undo" data-action="undo"><i data-lucide="rotate-ccw"></i></button>
+        <button class="tb-btn" id="tb-redo" data-action="redo"><i data-lucide="rotate-cw"></i></button>
+        <div class="sep-v"></div>
+      </div>
+
+      <div class="tb-tool-group">
         <button class="tb-btn" data-action="add-text" data-i18n-attr="title:toolbar.text"><i data-lucide="text-cursor-input"></i></button>
         <button class="tb-btn" data-action="add-title" data-i18n-attr="title:toolbar.title"><i data-lucide="heading"></i></button>
         <button class="tb-btn" data-action="add-image" data-i18n-attr="title:toolbar.image"><i data-lucide="image"></i></button>
         <button class="tb-btn" data-action="add-rect" data-i18n-attr="title:toolbar.rect"><i data-lucide="square"></i></button>
         <button class="tb-btn" data-action="add-circle" data-i18n-attr="title:toolbar.circle"><i data-lucide="circle"></i></button>
         <button class="tb-btn" data-action="add-arrow" data-i18n-attr="title:toolbar.arrow"><i data-lucide="arrow-right"></i></button>
-        <span class="sep"></span>
+        <div class="sep-v"></div>
+      </div>
+
+      <div class="tb-format-group">
         <select id="font-family-select">
           <option value="Arial">Arial</option>
           <option value="Helvetica">Helvetica</option>
@@ -38,27 +52,30 @@
           <option>20</option><option>24</option><option>28</option><option>32</option>
           <option>36</option><option>48</option><option>60</option><option selected>72</option>
         </select>
-        <span class="sep"></span>
         <button class="tb-btn" data-action="bold" data-i18n-attr="title:toolbar.bold"><i data-lucide="bold"></i></button>
         <button class="tb-btn" data-action="italic" data-i18n-attr="title:toolbar.italic"><i data-lucide="italic"></i></button>
         <button class="tb-btn" data-action="underline" data-i18n-attr="title:toolbar.underline"><i data-lucide="underline"></i></button>
         <button class="tb-btn" data-action="strikethrough" data-i18n-attr="title:toolbar.strikethrough"><i data-lucide="strikethrough"></i></button>
         <input type="color" id="text-color-input" value="#333333" data-i18n-attr="title:toolbar.color">
         <input type="color" id="text-bg-color" value="#000000" data-i18n-attr="title:toolbar.bgColor">
-        <span class="sep"></span>
+        <div class="sep-v"></div>
         <button class="tb-btn" data-action="align-left" data-i18n-attr="title:toolbar.alignLeft"><i data-lucide="align-left"></i></button>
         <button class="tb-btn" data-action="align-center" data-i18n-attr="title:toolbar.alignCenter"><i data-lucide="align-center"></i></button>
         <button class="tb-btn" data-action="align-right" data-i18n-attr="title:toolbar.alignRight"><i data-lucide="align-right"></i></button>
-        <span class="sep"></span>
+        <div class="sep-v"></div>
         <button class="tb-btn" data-action="bring-forward" data-i18n-attr="title:toolbar.bringForward"><i data-lucide="chevron-up"></i></button>
         <button class="tb-btn" data-action="send-backward" data-i18n-attr="title:toolbar.sendBackward"><i data-lucide="chevron-down"></i></button>
         <button class="tb-btn" data-action="delete" data-i18n-attr="title:toolbar.delete"><i data-lucide="trash-2"></i></button>
       </div>
+
       <div class="topbar-right">
         <button class="tb-btn" id="editor-theme-btn" data-i18n-attr="title:toolbar.theme"><i data-lucide="palette"></i></button>
         <button class="tb-btn" id="editor-settings-btn" data-i18n-attr="title:toolbar.settings"><i data-lucide="settings"></i></button>
-        <button class="tb-btn" id="ai-toggle-btn" title="AI"><i data-lucide="bot"></i></button>
-        <button class="tb-btn accent" data-action="start-presentation" data-i18n-attr="title:toolbar.presentation"><i data-lucide="play"></i></button>
+        <button class="tb-btn" id="ai-toggle-btn" title="AI" style="display:none"><i data-lucide="bot"></i></button>
+        <div class="sep-v"></div>
+        <button class="tb-btn accent" data-action="start-presentation" data-i18n-attr="title:toolbar.presentation">
+          <i data-lucide="play"></i> <span>Sunum</span>
+        </button>
       </div>
     </header>
 
@@ -75,10 +92,22 @@
       </aside>
 
       <main id="canvas-area">
+        <div id="canvas-ruler">
+          <span>0</span><span>100</span><span>200</span><span>300</span><span>400</span>
+          <span>500</span><span>600</span><span>700</span><span>800</span><span>900</span>
+        </div>
         <div id="canvas">
           <div id="slide-container"></div>
           <div id="grid-overlay"></div>
         </div>
+        <div class="zoom-bar">
+          <button class="zb-btn" id="zoom-out">−</button>
+          <span class="zb-value" id="zoom-value">%100</span>
+          <button class="zb-btn" id="zoom-in">+</button>
+        </div>
+        <button class="ai-fab" id="ai-fab-btn" title="AI Asistanı" onclick="document.getElementById('ai-toggle-btn').click()">
+          <i data-lucide="bot"></i>
+        </button>
       </main>
 
       <aside id="panel" class="panel-hidden">
@@ -86,54 +115,69 @@
           <span id="panel-title" data-i18n="editor.properties">Özellikler</span>
           <button id="panel-close"><i data-lucide="x"></i></button>
         </div>
-        <div id="panel-body"></div>
+        <div class="panel-tabs">
+          <button class="panel-tab active" data-tab="element">Öğe</button>
+          <button class="panel-tab" data-tab="slide">Slayt</button>
+          <button class="panel-tab" data-tab="animation">Animasyon</button>
+        </div>
+        <div id="panel-body">
+          <div class="pp-group">
+            <label class="pp-label" data-i18n="editor.background">Arkaplan</label>
+            <input type="color" id="slide-bg-color" value="#ffffff" class="pp-input pp-input-color">
+            <select id="theme-select" class="pp-input" style="margin-top:6px">
+              <option value="default" data-i18n="theme.default">Varsayılan</option>
+              <option value="dark" data-i18n="theme.dark">Karanlık</option>
+              <option value="nature" data-i18n="theme.nature">Doğa</option>
+              <option value="ocean" data-i18n="theme.ocean">Okyanus</option>
+            </select>
+          </div>
+        </div>
       </aside>
     </div>
 
-    <div id="ai-overlay" class="hidden">
-      <div id="ai-drawer">
-        <div class="ai-header">
-          <div class="ai-h-left">
-            <i data-lucide="bot" class="ai-icon"></i>
-            <span class="ai-label">AI</span>
-          </div>
-          <div class="ai-h-actions">
-            <button class="ai-chip" data-ai-slide><i data-lucide="layers"></i> <span data-i18n="ai.generateSlide">Slayt Üret</span></button>
-            <button class="ai-close-btn" id="ai-fullscreen-btn" title="Tam Ekran"><i data-lucide="maximize"></i></button>
-            <button class="ai-close-btn" id="ai-close-btn" title="Kapat"><i data-lucide="x"></i></button>
-          </div>
-        </div>
-        <div class="ai-body">
-          <div id="ai-messages"><div class="ai-welcome"><span data-i18n="ai.welcome">AI asistanına soru sor veya slayt üret.</span></div></div>
-          <div id="ai-typing" class="hidden"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></div>
-        </div>
-        <div class="ai-foot">
-          <div class="ai-chips">
-            <button class="ai-chip" data-ai-action="improve"><i data-lucide="sparkles"></i> <span data-i18n="ai.improve">Düzelt</span></button>
-            <button class="ai-chip" data-ai-action="summarize"><i data-lucide="align-left"></i> <span data-i18n="ai.summarize">Özetle</span></button>
-            <button class="ai-chip" data-ai-action="translate-en"><i data-lucide="languages"></i> EN</button>
-          </div>
-          <div class="ai-input-row">
-            <textarea id="ai-input" rows="1" placeholder="AI'ya bir şey sor..."></textarea>
-            <button id="ai-send" class="ai-send-btn"><i data-lucide="send"></i></button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="slide-bg-bar">
-      <label data-i18n="editor.background">Arkaplan</label>
-      <input type="color" id="slide-bg-color" value="#ffffff">
-      <select id="theme-select">
-        <option value="default" data-i18n="theme.default">Varsayılan</option>
-        <option value="dark" data-i18n="theme.dark">Karanlık</option>
-        <option value="nature" data-i18n="theme.nature">Doğa</option>
-        <option value="ocean" data-i18n="theme.ocean">Okyanus</option>
-      </select>
+    <div id="status-bar">
+      <span class="sb-item">
+        <span class="sb-dot"></span>
+        <span id="sb-save-status"></span>
+      </span>
+      <span class="sb-item" id="sb-slide-info"></span>
+      <span class="sb-item" id="sb-element-info"></span>
+      <span style="flex:1"></span>
+      <span class="sb-item">960 × 540 px</span>
     </div>
   </div>
 
-  <!-- Editor Settings Panel -->
+  <div id="ai-overlay" class="hidden">
+    <div id="ai-drawer">
+      <div class="ai-header">
+        <div class="ai-h-left">
+          <i data-lucide="bot" class="ai-icon"></i>
+          <span class="ai-label">AI</span>
+        </div>
+        <div class="ai-h-actions">
+          <button class="ai-chip" data-ai-slide><i data-lucide="layers"></i> <span data-i18n="ai.generateSlide">Slayt Üret</span></button>
+          <button class="ai-close-btn" id="ai-fullscreen-btn" title="Tam Ekran"><i data-lucide="maximize"></i></button>
+          <button class="ai-close-btn" id="ai-close-btn" title="Kapat"><i data-lucide="x"></i></button>
+        </div>
+      </div>
+      <div class="ai-body">
+        <div id="ai-messages"><div class="ai-welcome"><span data-i18n="ai.welcome">AI asistanına soru sor veya slayt üret.</span></div></div>
+        <div id="ai-typing" class="hidden"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></div>
+      </div>
+      <div class="ai-foot">
+        <div class="ai-chips">
+          <button class="ai-chip" data-ai-action="improve"><i data-lucide="sparkles"></i> <span data-i18n="ai.improve">Düzelt</span></button>
+          <button class="ai-chip" data-ai-action="summarize"><i data-lucide="align-left"></i> <span data-i18n="ai.summarize">Özetle</span></button>
+          <button class="ai-chip" data-ai-action="translate-en"><i data-lucide="languages"></i> EN</button>
+        </div>
+        <div class="ai-input-row">
+          <textarea id="ai-input" rows="1" placeholder="AI'ya bir şey sor..."></textarea>
+          <button id="ai-send" class="ai-send-btn"><i data-lucide="send"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="settings-overlay" class="hidden">
     <div id="settings-panel">
       <div class="settings-head">
@@ -148,58 +192,150 @@
       </div>
       <div class="settings-body">
         <div class="settings-tab-content active" id="tab-general">
-          <div class="sg"><label class="sg-label" data-i18n="settings.theme">Tema</label>
-            <div class="theme-cards">
-              <div class="theme-card" data-theme="dark">
-                <div class="theme-card-preview theme-card-dark"></div>
-                <span data-i18n="settings.dark">Koyu</span>
+          <div class="sp-section">
+            <span class="sp-section-label">Görünüm</span>
+            <div class="sg">
+              <label class="sg-label" data-i18n="settings.theme">Tema</label>
+              <div class="theme-cards">
+                <div class="theme-card" data-theme="dark">
+                  <div class="theme-card-preview theme-card-dark"></div>
+                  <span data-i18n="settings.dark">Koyu</span>
+                </div>
+                <div class="theme-card" data-theme="light">
+                  <div class="theme-card-preview theme-card-light"></div>
+                  <span data-i18n="settings.light">Açık</span>
+                </div>
+                <div class="theme-card" data-theme="system">
+                  <div class="theme-card-preview theme-card-system"></div>
+                  <span data-i18n="settings.system">Sistem</span>
+                </div>
               </div>
-              <div class="theme-card" data-theme="light">
-                <div class="theme-card-preview theme-card-light"></div>
-                <span data-i18n="settings.light">Açık</span>
-              </div>
-              <div class="theme-card" data-theme="system">
-                <div class="theme-card-preview theme-card-system"></div>
-                <span data-i18n="settings.system">Sistem</span>
+            </div>
+            <div class="sg">
+              <div class="sg-row">
+                <label class="sg-label" data-i18n="settings.language">Dil</label>
+                <select id="set-language"><option value="tr" data-i18n="lang.tr">Türkçe</option><option value="en" data-i18n="lang.en">English</option></select>
               </div>
             </div>
           </div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.language">Dil</label><select id="set-language"><option value="tr" data-i18n="lang.tr">Türkçe</option><option value="en" data-i18n="lang.en">English</option></select></div>
-          <div class="sg"><label class="sg-label"><span data-i18n="settings.autoSave">Otomatik Kaydet</span><input type="checkbox" id="set-autosave"></label></div>
-          <div class="sg" id="sg-autosave-interval"><label class="sg-label" data-i18n="settings.autoSaveInterval">Kaydetme Aralığı</label><select id="set-autosave-interval"><option value="30" data-i18n="autosave.30sec">30 saniye</option><option value="60" data-i18n="autosave.1min">1 dakika</option><option value="120" data-i18n="autosave.2min">2 dakika</option><option value="300" data-i18n="autosave.5min">5 dakika</option></select></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.defaultTemplate">Varsayılan Şablon</label><select id="set-default-template"><option value="blank" data-i18n="template.blank">Boş Proje</option><option value="business" data-i18n="template.business">İş Sunumu</option><option value="education" data-i18n="template.education">Eğitim</option><option value="minimal" data-i18n="template.minimal">Minimalist</option></select></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.recentCount">Son Proje Sayısı</label><select id="set-recent-count"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select></div>
+          <div class="sp-section">
+            <span class="sp-section-label">Kaydetme</span>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.autoSave">Otomatik Kaydet</span>
+                <label class="toggle-wrap">
+                  <input type="checkbox" id="set-autosave" hidden>
+                  <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                </label>
+              </div>
+            </div>
+            <div class="sg" id="sg-autosave-interval">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.autoSaveInterval">Kaydetme Aralığı</span>
+                <select id="set-autosave-interval"><option value="30" data-i18n="autosave.30sec">30 saniye</option><option value="60" data-i18n="autosave.1min">1 dakika</option><option value="120" data-i18n="autosave.2min">2 dakika</option><option value="300" data-i18n="autosave.5min">5 dakika</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="sp-section">
+            <span class="sp-section-label">Projeler</span>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.defaultTemplate">Varsayılan Şablon</span>
+                <select id="set-default-template"><option value="blank" data-i18n="template.blank">Boş Proje</option><option value="business" data-i18n="template.business">İş Sunumu</option><option value="education" data-i18n="template.education">Eğitim</option><option value="minimal" data-i18n="template.minimal">Minimalist</option></select>
+              </div>
+            </div>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.recentCount">Son Proje Sayısı</span>
+                <select id="set-recent-count"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="settings-tab-content" id="tab-editor">
-          <div class="sg"><label class="sg-label"><span data-i18n="settings.snapToGrid">Izgaraya Yapış</span><input type="checkbox" id="set-snap"></label></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.gridSize">Izgara Aralığı</label><select id="set-grid-size"><option value="10">10px</option><option value="20">20px</option><option value="50">50px</option></select></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.defaultFont">Varsayılan Yazı Tipi</label><select id="set-font-family"><option value="Arial">Arial</option><option value="Helvetica">Helvetica</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option></select></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.defaultFontSize">Varsayılan Yazı Boyutu</label><select id="set-font-size"><option value="14">14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option><option value="24">24px</option></select></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.canvasBg">Canvas Arkaplan Rengi</label><input type="color" id="set-canvas-bg" value="#1a1a1a"></div>
-          <div class="sg"><label class="sg-label"><span data-i18n="settings.autoPanel">Özellik Panelini Otomatik Aç</span><input type="checkbox" id="set-auto-panel"></label></div>
-          <div class="sg"><label class="sg-label" data-i18n="settings.thumbSize">Thumbnail Boyutu</label><select id="set-thumb-size"><option value="small" data-i18n="thumbSize.small">Küçük</option><option value="medium" data-i18n="thumbSize.medium">Orta</option><option value="large" data-i18n="thumbSize.large">Büyük</option></select></div>
+          <div class="sp-section">
+            <span class="sp-section-label">Izgara &amp; Yapışma</span>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.snapToGrid">Izgaraya Yapış</span>
+                <label class="toggle-wrap">
+                  <input type="checkbox" id="set-snap" hidden>
+                  <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                </label>
+              </div>
+            </div>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.gridSize">Izgara Aralığı</span>
+                <select id="set-grid-size"><option value="10">10px</option><option value="20">20px</option><option value="50">50px</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="sp-section">
+            <span class="sp-section-label">Yazı Tipi Varsayılanları</span>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.defaultFont">Varsayılan Yazı Tipi</span>
+                <select id="set-font-family"><option value="Arial">Arial</option><option value="Helvetica">Helvetica</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Courier New">Courier New</option><option value="Verdana">Verdana</option></select>
+              </div>
+            </div>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.defaultFontSize">Varsayılan Yazı Boyutu</span>
+                <select id="set-font-size"><option value="14">14px</option><option value="16">16px</option><option value="18">18px</option><option value="20">20px</option><option value="24">24px</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="sp-section">
+            <span class="sp-section-label">Tuval</span>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.canvasBg">Canvas Arkaplan Rengi</span>
+                <input type="color" id="set-canvas-bg" value="#1a1a1a">
+              </div>
+            </div>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.autoPanel">Özellik Panelini Otomatik Aç</span>
+                <label class="toggle-wrap">
+                  <input type="checkbox" id="set-auto-panel" hidden>
+                  <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                </label>
+              </div>
+            </div>
+            <div class="sg">
+              <div class="sg-row">
+                <span class="sg-label" data-i18n="settings.thumbSize">Thumbnail Boyutu</span>
+                <select id="set-thumb-size"><option value="small" data-i18n="thumbSize.small">Küçük</option><option value="medium" data-i18n="thumbSize.medium">Orta</option><option value="large" data-i18n="thumbSize.large">Büyük</option></select>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="settings-tab-content" id="tab-shortcuts">
-          <div class="shortcuts-list">
-            <div class="sc-item"><span class="sc-key">Ctrl+Z</span><span class="sc-desc" data-i18n="shortcuts.undo">Geri Al</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+Y</span><span class="sc-desc" data-i18n="shortcuts.redo">İleri Al</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+S</span><span class="sc-desc" data-i18n="shortcuts.save">Kaydet</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+C</span><span class="sc-desc" data-i18n="shortcuts.copy">Kopyala</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+V</span><span class="sc-desc" data-i18n="shortcuts.paste">Yapıştır</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+B</span><span class="sc-desc" data-i18n="shortcuts.bold">Kalın</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+I</span><span class="sc-desc" data-i18n="shortcuts.italic">İtalik</span></div>
-            <div class="sc-item"><span class="sc-key">Ctrl+U</span><span class="sc-desc" data-i18n="shortcuts.underline">Altı Çizili</span></div>
-            <div class="sc-item"><span class="sc-key">Delete</span><span class="sc-desc" data-i18n="shortcuts.delete">Seçili Öğeyi Sil</span></div>
-            <div class="sc-item"><span class="sc-key">F5</span><span class="sc-desc" data-i18n="shortcuts.presentation">Sunumu Başlat</span></div>
-            <div class="sc-item"><span class="sc-key">Escape</span><span class="sc-desc" data-i18n="shortcuts.close">Panel/Menü Kapat</span></div>
+          <div class="sp-section">
+            <span class="sp-section-label">Klavye kısayolları</span>
+            <div class="shortcuts-list">
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.undo">Geri Al</span><span class="sc-key">Ctrl+Z</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.redo">İleri Al</span><span class="sc-key">Ctrl+Y</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.save">Kaydet</span><span class="sc-key">Ctrl+S</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.copy">Kopyala</span><span class="sc-key">Ctrl+C</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.paste">Yapıştır</span><span class="sc-key">Ctrl+V</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.bold">Kalın</span><span class="sc-key">Ctrl+B</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.italic">İtalik</span><span class="sc-key">Ctrl+I</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.underline">Altı Çizili</span><span class="sc-key">Ctrl+U</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.delete">Seçili Öğeyi Sil</span><span class="sc-key">Delete</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.presentation">Sunumu Başlat</span><span class="sc-key">F5</span></div>
+              <div class="sc-item"><span class="sc-desc" data-i18n="shortcuts.close">Panel/Menü Kapat</span><span class="sc-key">Escape</span></div>
+            </div>
           </div>
         </div>
         <div class="settings-tab-content" id="tab-about">
           <div class="about-section">
-            <div class="about-logo">oSlide2</div>
-            <div class="about-version">v1.0.0</div>
+            <div class="about-logo-mark">O</div>
+            <div class="about-app-name">oSlide2</div>
+            <div class="about-version-badge">v1.0.0</div>
             <div class="about-desc" data-i18n="about.desc">Electron tabanlı modern sunum uygulaması</div>
-            <div class="about-tech"><span>Electron</span><span>Node.js</span><span>Lucide</span></div>
+            <div class="about-tech"><span class="about-tag">Electron</span><span class="about-tag">Node.js</span><span class="about-tag">Lucide</span></div>
           </div>
         </div>
       </div>
@@ -210,7 +346,6 @@
     </div>
   </div>
 
-  <!-- Theme Picker -->
   <div id="editor-theme-overlay" class="hidden">
     <div id="editor-theme-panel">
       <div class="dialog-head">
@@ -226,7 +361,6 @@
     </div>
   </div>
 
-  <!-- Settings -->
   <div id="editor-ctx-menu" class="ctx-menu hidden">
     <div class="ctx-item" data-action="copy"><i data-lucide="copy"></i> <span data-i18n="context.copy">Kopyala</span></div>
     <div class="ctx-item" data-action="paste"><i data-lucide="clipboard-paste"></i> <span data-i18n="context.paste">Yapıştır</span></div>
