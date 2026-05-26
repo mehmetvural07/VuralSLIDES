@@ -438,8 +438,6 @@ ipcMain.handle('open-external', async (event, url) => {
   return true;
 });
 
-app.commandLine.appendSwitch('allow-file-access-from-files')
-
 app.whenReady().then(() => {
   createHomeWindow();
   Menu.setApplicationMenu(null);

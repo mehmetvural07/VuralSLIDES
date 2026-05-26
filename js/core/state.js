@@ -6,7 +6,7 @@ const CoreState = {
 
 let _eidCounter = 1;
 function genId() { return 'e' + (_eidCounter++); }
-function cloneObj(o) { return JSON.parse(JSON.stringify(o)); }
+function cloneObj(o) { return structuredClone(o); }
 
 function saveSnapshot() {
   CoreState.undo.push(cloneObj({ slides: CoreState.slides, cur: CoreState.cur }));

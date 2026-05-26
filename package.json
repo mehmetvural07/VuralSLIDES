@@ -23,8 +23,7 @@
     "win": {
       "target": "portable",
       "icon": "assets/icon.png",
-      "cscLink": "assets/cert.pfx",
-      "cscKeyPassword": "1234"
+      "cscLink": "assets/cert.pfx"
     }
   },
   "keywords": [],

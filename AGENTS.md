@@ -6,6 +6,13 @@ oSlide2 is an Electron-based slide/presentation app. Vanilla JS, no frameworks.
 ## Commands
 - **Start**: `npm start`
 - **Test**: `npm test` (not implemented — placeholder)
+- **Build (signed)**: `set CSC_KEY_PASSWORD=1234 && npm run build`
+- **Build (unsigned)**: `npm run build` (produces unsigned EXE if cert present but no password)
+
+## Security Notes
+- Cert password must be set via `CSC_KEY_PASSWORD` env var (NOT in package.json)
+- `--allow-file-access-from-files` flag is NOT used — images go through IPC
+- renderMD() sanitizes href to only allow `http://` and `https://` protocols
 
 ## Architecture
 - `main.js` — Electron main process (windows, IPC handlers, menus)
@@ -24,7 +31,9 @@ oSlide2 is an Electron-based slide/presentation app. Vanilla JS, no frameworks.
 7. `ui/panels.js` — Properties panel (depends on state + actions + renderer)
 8. `ui/canvas.js` — Canvas interactions (depends on all above)
 9. `services/fileManager.js` — File I/O
-10. `pages/editor.js` or `pages/home.js` — Page init
+10. `services/export.js` — Export to PDF/PNG
+11. `services/ai-ui.js` — AI chat UI (depends on state + actions + renderer + ai)
+12. `pages/editor.js` or `pages/home.js` — Page init
 
 ## Key Conventions
 - Always use `window.*` for cross-module access
