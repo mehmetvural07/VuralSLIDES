@@ -540,38 +540,45 @@ function initAI() {
         const mc = th?.textColor || '#444'
         const mf = th?.textFont || 'Arial'
 
-        slides.forEach(s => {
+        const layouts = [
+          // 0 — Classic: title centered top, bullets stacked below
+          (els, title, bullets) => {
+            els.push({ id: id(), type: 'title', content: title, x: 60, y: 40, width: 840, height: 65, fontSize: 42, fontFamily: tf, color: tc, bold: true, textAlign: 'center' })
+            bullets.forEach((b, i) => els.push({ id: id(), type: 'text', content: `•  ${b}`, x: 70, y: 130 + i * 38, width: 820, height: 34, fontSize: 20, fontFamily: mf, color: mc, textAlign: 'left' }))
+          },
+          // 1 — Side: title left 35%, bullets right 60%
+          (els, title, bullets) => {
+            els.push({ id: id(), type: 'title', content: title, x: 50, y: 60, width: 320, height: 80, fontSize: 36, fontFamily: tf, color: tc, bold: true, textAlign: 'right' })
+            bullets.forEach((b, i) => els.push({ id: id(), type: 'text', content: `•  ${b}`, x: 420, y: 60 + i * 36, width: 500, height: 32, fontSize: 19, fontFamily: mf, color: mc, textAlign: 'left' }))
+          },
+          // 2 — Two columns: title thin top strip, bullets in 2 cols
+          (els, title, bullets) => {
+            els.push({ id: id(), type: 'title', content: title, x: 60, y: 25, width: 840, height: 45, fontSize: 30, fontFamily: tf, color: tc, bold: true, textAlign: 'center' })
+            const half = Math.ceil(bullets.length / 2)
+            bullets.forEach((b, i) => {
+              const col = i < half ? 0 : 1
+              const idx = i < half ? i : i - half
+              els.push({ id: id(), type: 'text', content: `•  ${b}`, x: 60 + col * 430, y: 90 + idx * 36, width: 410, height: 32, fontSize: 18, fontFamily: mf, color: mc, textAlign: 'left' })
+            })
+          },
+          // 3 — Spacious: big title, fewer bullets with extra gap
+          (els, title, bullets) => {
+            els.push({ id: id(), type: 'title', content: title, x: 60, y: 50, width: 840, height: 80, fontSize: 48, fontFamily: tf, color: tc, bold: true, textAlign: 'center' })
+            bullets.forEach((b, i) => els.push({ id: id(), type: 'text', content: `•  ${b}`, x: 80, y: 160 + i * 50, width: 800, height: 40, fontSize: 22, fontFamily: mf, color: mc, textAlign: 'left' }))
+          },
+          // 4 — Compact: title top-left, bullets fill remaining
+          (els, title, bullets) => {
+            els.push({ id: id(), type: 'title', content: title, x: 60, y: 25, width: 500, height: 40, fontSize: 26, fontFamily: tf, color: tc, bold: true, textAlign: 'left' })
+            bullets.forEach((b, i) => els.push({ id: id(), type: 'text', content: `•  ${b}`, x: 60, y: 80 + i * 34, width: 840, height: 30, fontSize: 19, fontFamily: mf, color: mc, textAlign: 'left' }))
+          },
+        ]
+
+        slides.forEach((s, idx) => {
           save()
           const els = []
-          const slideW = 960
-          const margin = 60
-          const contentW = slideW - margin * 2
-
-          els.push({
-            id: id(), type: 'title', content: s.title || '',
-            x: margin, y: 40, width: contentW, height: 65,
-            fontSize: 40, fontFamily: tf, color: tc,
-            bold: true, textAlign: 'center',
-            italic: false, underline: false, strikethrough: false,
-            bgColor: '', opacity: 1, rotation: 0,
-          })
-
           const bullets = Array.isArray(s.bullets) ? s.bullets : []
-          const startY = 125
-          const lineH = 38
-          bullets.forEach((b, i) => {
-            els.push({
-              id: id(), type: 'text',
-              content: `•  ${b}`,
-              x: margin + 10, y: startY + i * lineH,
-              width: contentW - 20, height: 34,
-              fontSize: 20, fontFamily: mf, color: mc,
-              bold: false, italic: false, underline: false,
-              strikethrough: false, textAlign: 'left',
-              bgColor: '', opacity: 1, rotation: 0,
-            })
-          })
-
+          const layout = layouts[idx % layouts.length]
+          layout(els, s.title || '', bullets)
           App.slides.push({ id: id(), background: bg, elements: els })
         })
         renderAll()
