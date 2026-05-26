@@ -403,6 +403,7 @@
     const template = document.getElementById('template-select').value;
     const themeId = document.getElementById('project-theme-select')?.value
     closeDialog();
+    const result = await ProjectManager.create(name, template);
     let appliedTheme = null
     if (result && themeId) {
       const themes = await ProjectManager.getThemes()
