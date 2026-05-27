@@ -66,7 +66,7 @@ function getData() {
 
 function loadData(d) {
   App.slides = d.slides;
-  App.theme = d.theme || 'default';
+  App.theme = (d.theme && typeof d.theme === 'object') ? (d.theme.name || 'default') : (d.theme || 'default');
   App.cur = 0;
   App.sel = null;
   App.path = null;

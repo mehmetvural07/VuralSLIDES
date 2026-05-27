@@ -294,8 +294,11 @@ ipcMain.handle('open-file-dialog', async () => {
     properties: ['openFile']
   });
   if (!result.canceled && result.filePaths.length > 0) {
-    const data = fs.readFileSync(result.filePaths[0], 'utf-8');
-    return JSON.parse(data);
+    const fp = result.filePaths[0]
+    const raw = fs.readFileSync(fp, 'utf-8')
+    const data = JSON.parse(raw)
+    const name = path.basename(fp, '.slidelab')
+    return { data, filePath: fp, fileName: name }
   }
   return null;
 });

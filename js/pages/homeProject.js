@@ -172,6 +172,7 @@
       setTimeout(() => openThemeEditor(null), 50)
     })
 
+    document.getElementById('open-file-btn')?.addEventListener('click', openFileDialog)
     document.getElementById('sidebar-settings')?.addEventListener('click', openSettings)
 
     document.getElementById('dialog-close')?.addEventListener('click', closeDialog)
@@ -330,9 +331,14 @@
 
   async function openFileDialog() {
     if (window.electronAPI) {
-      const data = await window.electronAPI.openFileDialog()
-      if (data) {
-        window.electronAPI.openEditor({ ...data, _fromFile: true })
+      const r = await window.electronAPI.openFileDialog()
+      if (r && r.data) {
+        window.electronAPI.openEditor({
+          ...r.data,
+          _projectName: r.fileName,
+          _projectPath: r.filePath,
+          _fromFile: true
+        })
       }
     }
   }
