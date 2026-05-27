@@ -1,3 +1,4 @@
+/** Adds a new slide after the current slide @returns {void} */
 function addSlide() {
   save();
   const bg = App.projectTheme?.canvasBg || '#ffffff'
@@ -5,6 +6,7 @@ function addSlide() {
   selectSlide(App.cur + 1);
 }
 
+/** @param {number} i - Slide index to delete (min 1 slide must remain) @returns {void} */
 function delSlide(i) {
   if (App.slides.length < 2) return;
   save();
@@ -14,6 +16,7 @@ function delSlide(i) {
   renderAll();
 }
 
+/** Duplicates the current slide @returns {void} */
 function dupSlide() {
   save();
   const c = slide();
@@ -24,6 +27,7 @@ function dupSlide() {
   selectSlide(App.cur + 1);
 }
 
+/** @param {number} i - Slide index to select @returns {void} */
 function selectSlide(i) {
   if (i < 0 || i >= App.slides.length) return;
   App.cur = i;
@@ -33,6 +37,7 @@ function selectSlide(i) {
   hidePanel();
 }
 
+/** @param {number} from - Source index @param {number} to - Target index @returns {void} */
 function moveSlide(from, to) {
   if (from === to) return;
   save();
@@ -42,6 +47,12 @@ function moveSlide(from, to) {
   renderAll();
 }
 
+/**
+ * Adds an element to the current slide
+ * @param {string} type - Element type
+ * @param {Object} [props] - Optional properties (content, src, x, y, etc.)
+ * @returns {void}
+ */
 function addEl(type, props) {
   save();
   const s = slide();
@@ -72,6 +83,7 @@ function addEl(type, props) {
   updateToolbar();
 }
 
+/** Deletes selected element(s) — uses selectedIds or sel @returns {void} */
 function delEl() {
   const ids = App.selectedIds?.length ? App.selectedIds : (App.sel ? [App.sel] : [])
   if (!ids.length) return;
@@ -87,6 +99,12 @@ function delEl() {
   updateToolbar();
 }
 
+/**
+ * Updates element properties
+ * @param {string} id - Element ID
+ * @param {Object} props - Properties to merge
+ * @returns {void}
+ */
 function updEl(id, props) {
   const e = slide()?.elements.find(x => x.id === id);
   if (!e) return;
@@ -96,6 +114,7 @@ function updEl(id, props) {
   if (App.sel === id) showPanel(e);
 }
 
+/** Copies selected element(s) to clipboard @returns {void} */
 function copyEl() {
   const ids = App.selectedIds?.length ? App.selectedIds : (App.sel ? [App.sel] : [])
   if (!ids.length) return;
@@ -107,6 +126,7 @@ function copyEl() {
   }).filter(Boolean)
 }
 
+/** Pastes clipboard elements with offset @returns {void} */
 function pasteEl() {
   if (!App.clipboard) return;
   const items = Array.isArray(App.clipboard) ? App.clipboard : [App.clipboard]
@@ -130,6 +150,7 @@ function pasteEl() {
   updateToolbar();
 }
 
+/** Moves selected element forward in z-order @returns {void} */
 function fwd() {
   const s = slide();
   if (!s || !App.sel) return;
@@ -142,6 +163,7 @@ function fwd() {
   }
 }
 
+/** Moves selected element backward in z-order @returns {void} */
 function bwd() {
   const s = slide();
   if (!s || !App.sel) return;
@@ -154,26 +176,31 @@ function bwd() {
   }
 }
 
+/** Toggles bold on selected text element @returns {void} */
 function toggleBold() {
   const e = selEl();
   if (e && e.type === 'text') { updEl(e.id, { bold: !e.bold }); updateToolbar(); }
 }
 
+/** Toggles italic on selected text element @returns {void} */
 function toggleItalic() {
   const e = selEl();
   if (e && e.type === 'text') { updEl(e.id, { italic: !e.italic }); updateToolbar(); }
 }
 
+/** Toggles underline on selected text element @returns {void} */
 function toggleUnderline() {
   const e = selEl();
   if (e && e.type === 'text') { updEl(e.id, { underline: !e.underline }); updateToolbar(); }
 }
 
+/** Toggles strikethrough on selected text element @returns {void} */
 function toggleStrikethrough() {
   const e = selEl();
   if (e && e.type === 'text') { updEl(e.id, { strikethrough: !e.strikethrough }); updateToolbar(); }
 }
 
+/** @returns {Array<Object>} Currently selected element objects */
 function getSelected() {
   const ids = App.selectedIds?.length ? App.selectedIds : (App.sel ? [App.sel] : [])
   const s = slide()
@@ -181,6 +208,11 @@ function getSelected() {
   return ids.map(id => s.elements.find(e => e.id === id)).filter(Boolean)
 }
 
+/**
+ * Aligns selected elements to an edge or center
+ * @param {string} edge - 'left'|'centerX'|'right'|'top'|'centerY'|'bottom'
+ * @returns {void}
+ */
 function alignEls(edge) {
   const els = getSelected()
   if (els.length < 2) return
@@ -208,6 +240,11 @@ function alignEls(edge) {
   renderThumbs()
 }
 
+/**
+ * Distributes selected elements evenly
+ * @param {string} axis - 'horizontal' or 'vertical'
+ * @returns {void}
+ */
 function distributeEls(axis) {
   const els = getSelected()
   if (els.length < 3) return
@@ -230,6 +267,11 @@ function distributeEls(axis) {
   renderThumbs()
 }
 
+/**
+ * Matches width/height of selected elements to the largest
+ * @param {string} prop - 'width'|'height'|'both'
+ * @returns {void}
+ */
 function matchEls(prop) {
   const els = getSelected()
   if (els.length < 2) return

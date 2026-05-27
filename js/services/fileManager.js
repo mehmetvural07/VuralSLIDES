@@ -12,6 +12,7 @@
     if (e.target.closest('#canvas-area') || e.target.closest('#slide-list')) e.preventDefault();
   });
 
+  /** Opens the native file picker to import an image onto the current slide @returns {void} */
   window.importImageFromFile = function() { inp.click(); };
 
   inp.addEventListener('change', function() {

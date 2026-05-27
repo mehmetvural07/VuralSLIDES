@@ -2,6 +2,11 @@ let aiOpen = false
 let aiMsgs = []
 let aiBusy = false
 
+/**
+ * Renders Markdown to safe HTML (protocol-whitelisted)
+ * @param {string} text - Markdown text
+ * @returns {string} Safe HTML
+ */
 function renderMD(text) {
   const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   let h = esc
@@ -17,6 +22,7 @@ function renderMD(text) {
   return `<p>${h}</p>`
 }
 
+/** Initializes AI chat UI and event listeners @returns {void} */
 function initAI() {
   const overlay = document.getElementById('ai-overlay')
   const drawer = document.getElementById('ai-drawer')

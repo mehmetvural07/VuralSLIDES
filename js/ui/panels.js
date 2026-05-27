@@ -1,3 +1,8 @@
+/**
+ * Shows and populates the properties panel for an element
+ * @param {Object} el - Element data
+ * @returns {void}
+ */
 function showPanel(el) {
   const panel = document.getElementById('panel');
   const body = document.getElementById('panel-body');
@@ -119,6 +124,7 @@ function showPanel(el) {
   });
 }
 
+/** Hides the properties panel @returns {void} */
 function hidePanel() {
   const panel = document.getElementById('panel');
   if (panel) panel.classList.add('panel-hidden');

@@ -1,3 +1,8 @@
+/**
+ * Generates a content cache key for an element
+ * @param {Object} el - Element data
+ * @returns {string} Cache key string
+ */
 function contentKey(el) {
   switch (el.type) {
     case 'title': case 'text':
@@ -15,6 +20,7 @@ function contentKey(el) {
   }
 }
 
+/** Renders current slide into the DOM (diff-based, skips unchanged elements) @returns {void} */
 function renderSlide() {
   const c = document.getElementById('slide-container');
   const s = slide();
@@ -69,6 +75,12 @@ function renderSlide() {
   if (window.updateStatusBar) window.updateStatusBar();
 }
 
+/**
+ * Renders a single element into a DOM container
+ * @param {HTMLElement} d - Target DOM element
+ * @param {Object} el - Element data
+ * @returns {void}
+ */
 function renderEl(d, el) {
   switch (el.type) {
     case 'title':
@@ -128,6 +140,12 @@ function renderEl(d, el) {
   }
 }
 
+/**
+ * Applies typography CSS to a text/title element
+ * @param {HTMLElement} d - DOM element
+ * @param {Object} el - Element data
+ * @returns {void}
+ */
 function applyTextStyle(d, el) {
   d.style.fontSize = (el.fontSize || 16) + 'px';
   d.style.fontFamily = el.fontFamily || 'Arial';
@@ -146,6 +164,11 @@ function applyTextStyle(d, el) {
   d.style.border = 'none';
 }
 
+/**
+ * Adds 8 resize handles (nw, n, ne, e, se, s, sw, w) to an element
+ * @param {HTMLElement} d - DOM element
+ * @returns {void}
+ */
 function addHandles(d) {
   for (const p of ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']) {
     const h = document.createElement('div');
@@ -154,6 +177,7 @@ function addHandles(d) {
   }
 }
 
+/** Renders all slide thumbnails (diff-based, reuses existing DOM nodes) @returns {void} */
 function renderThumbs() {
   const list = document.getElementById('slide-list');
   if (!list) return;
@@ -235,10 +259,12 @@ function renderThumbs() {
   });
 }
 
+/** Escapes HTML entities for thumbnail text @param {string} s @returns {string} */
 function escThumb(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+/** Full re-render: slide + thumbnails + toolbar + status @returns {void} */
 function renderAll() {
   renderSlide();
   renderThumbs();
@@ -248,6 +274,7 @@ function renderAll() {
   if (window.updateStatusBar) window.updateStatusBar();
 }
 
+/** Updates toolbar button states based on selection @returns {void} */
 function updateToolbar() {
   const el = selEl();
   const bold = document.querySelector('[data-action="bold"]');

@@ -5,6 +5,13 @@
   let snapEnabled = true;
   const SNAP_THRESHOLD = 6;
 
+  /**
+   * Collects snap points from canvas edges, center + all other elements
+   * @param {number} cw - Canvas width
+   * @param {number} ch - Canvas height
+   * @param {string} excludeId - Element ID to exclude
+   * @returns {{x: number[], y: number[]}}
+   */
   function getSnapPoints(cw, ch, excludeId) {
     const pts = { x: [0, cw, cw / 2], y: [0, ch, ch / 2] }
     const els = slide()?.elements || []
@@ -16,6 +23,17 @@
     return pts
   }
 
+  /**
+   * Computes snap deltas and guide line positions for a dragged element
+   * @param {number} nx - Proposed new X
+   * @param {number} ny - Proposed new Y
+   * @param {number} w - Element width
+   * @param {number} h - Element height
+   * @param {number} cw - Canvas width
+   * @param {number} ch - Canvas height
+   * @param {string} excludeId - Element ID to exclude
+   * @returns {{dx: number, dy: number, gx: number|null, gy: number|null}}
+   */
   function computeSnap(nx, ny, w, h, cw, ch, excludeId) {
     const pts = getSnapPoints(cw, ch, excludeId)
     const myX = [nx, nx + w, nx + w / 2]
@@ -51,6 +69,7 @@
     return guideContainer
   }
 
+  /** Renders red snap guide lines on the canvas @param {HTMLElement} canvas @param {number|null} gx @param {number|null} gy @returns {void} */
   function showGuides(canvas, gx, gy) {
     const c = ensureGuides(canvas)
     c.innerHTML = ''
@@ -66,10 +85,16 @@
     }
   }
 
+  /** Removes all snap guide lines @returns {void} */
   function clearGuides() {
     if (guideContainer) guideContainer.innerHTML = ''
   }
 
+  /**
+   * Handles mousedown on canvas — selection, drag start, resize start
+   * @param {MouseEvent} e
+   * @returns {void}
+   */
   function onDown(e) {
     if (editing) return;
     const el = e.target.closest('.canvas-el');
@@ -134,6 +159,7 @@
 
   let dragOrigins = []
 
+  /** Initiates element drag @param {HTMLElement} el @param {MouseEvent} e @returns {void} */
   function startDrag(el, e) {
     dragging = true;
     target = el;
@@ -151,6 +177,7 @@
     e.preventDefault();
   }
 
+  /** Initiates element resize @param {HTMLElement} el @param {HTMLElement} rh @param {MouseEvent} e @returns {void} */
   function startResize(el, rh, e) {
     resizing = true;
     target = el;
@@ -165,6 +192,7 @@
     e.stopPropagation();
   }
 
+  /** Handles mousemove during drag/resize — updates position, renders guides @param {MouseEvent} e @returns {void} */
   function onMove(e) {
     if (!dragging && !resizing) return;
     if (!target) return;
@@ -227,6 +255,7 @@
     }
   }
 
+  /** Finalizes drag/resize — saves state, updates element data @param {MouseEvent} e @returns {void} */
   function onUp(e) {
     if (dragging || resizing) {
       const allIds = dragging && dragOrigins.length
@@ -265,6 +294,7 @@
     clearGuides();
   }
 
+  /** Saves text content on blur @param {FocusEvent} e @returns {void} */
   function onTextBlur(e) {
     const d = e.target.closest('.canvas-el.text-el');
     if (!d) return;
@@ -279,12 +309,14 @@
     editing = false;
   }
 
+  /** Marks text editing as active @param {FocusEvent} e @returns {void} */
   function onTextFocus(e) {
     if (e.target.closest('.canvas-el.text-el')) editing = true;
   }
 
   let ctxElId = null;
 
+  /** Shows the editor context menu @param {MouseEvent} e @param {string} elId @returns {void} */
   function showEditorCtx(e, elId) {
     ctxElId = elId;
     const menu = document.getElementById('editor-ctx-menu');
@@ -294,12 +326,14 @@
     menu.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
   }
 
+  /** Hides the editor context menu @returns {void} */
   function hideEditorCtx() {
     const menu = document.getElementById('editor-ctx-menu');
     if (menu) menu.classList.add('hidden');
     ctxElId = null;
   }
 
+  /** Handles right-click on canvas elements @param {MouseEvent} e @returns {void} */
   function onCtxMenu(e) {
     const el = e.target.closest('.canvas-el');
     if (!el) return;
@@ -317,6 +351,7 @@
     showEditorCtx(e, id);
   }
 
+  /** Handles context menu item clicks @param {MouseEvent} e @returns {void} */
   function onCtxClick(e) {
     const item = e.target.closest('.ctx-item');
     const action = item?.dataset.action;
@@ -331,6 +366,7 @@
     }
   }
 
+  /** Handles image file drop onto canvas @param {DragEvent} e @returns {void} */
   function onDrop(e) {
     e.preventDefault();
     const files = e.dataTransfer.files;
@@ -357,6 +393,7 @@
     }
   }
 
+  /** Initializes canvas event listeners @returns {void} */
   function init() {
     const area = document.getElementById('canvas-area');
     if (!area) return;

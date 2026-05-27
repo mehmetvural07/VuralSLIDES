@@ -1,3 +1,21 @@
+/**
+ * Global application state
+ * @typedef {Object} CoreState
+ * @property {Array<Slide>} slides - Slide objects
+ * @property {number} cur - Current slide index
+ * @property {string} theme - Active theme name
+ * @property {string|null} sel - Selected element ID
+ * @property {Array<string>} selectedIds - Multi-selected IDs
+ * @property {string|null} path - File path to current project
+ * @property {boolean} dirty - Unsaved changes flag
+ * @property {Array<{slides:Array, cur:number}>} undo - Undo stack
+ * @property {Array<{slides:Array, cur:number}>} redo - Redo stack
+ * @property {number} maxUndo - Max undo steps (default: 50)
+ * @property {Array|null} clipboard - Copied elements
+ * @property {string|null} projectId - Current project ID
+ * @property {string|null} projectName - Current project name
+ * @property {Object|null} projectTheme - Applied theme
+ */
 const CoreState = {
   slides: [], cur: 0, theme: 'default', sel: null, selectedIds: [], path: null,
   dirty: false, undo: [], redo: [], maxUndo: 50, _eid: 1, clipboard: null,
@@ -5,9 +23,18 @@ const CoreState = {
 };
 
 let _eidCounter = 1;
+
+/** @returns {string} Unique element ID (e1, e2, …) */
 function genId() { return 'e' + (_eidCounter++); }
+
+/** @param {Object} o - Object to clone @returns {Object} Deep copy via structuredClone */
 function cloneObj(o) { return structuredClone(o); }
 
+/**
+ * Saves current state snapshot to undo stack.
+ * Clears redo stack and marks dirty.
+ * @returns {void}
+ */
 function saveSnapshot() {
   CoreState.undo.push(cloneObj({ slides: CoreState.slides, cur: CoreState.cur }));
   if (CoreState.undo.length > CoreState.maxUndo) CoreState.undo.shift();
@@ -15,6 +42,7 @@ function saveSnapshot() {
   CoreState.dirty = true;
 }
 
+/** Restores previous state from undo stack @returns {void} */
 function undoSnapshot() {
   if (!CoreState.undo.length) return;
   CoreState.redo.push(cloneObj({ slides: CoreState.slides, cur: CoreState.cur }));
@@ -24,6 +52,7 @@ function undoSnapshot() {
   CoreState.sel = null;
 }
 
+/** Restores next state from redo stack @returns {void} */
 function redoSnapshot() {
   if (!CoreState.redo.length) return;
   CoreState.undo.push(cloneObj({ slides: CoreState.slides, cur: CoreState.cur }));
@@ -33,7 +62,10 @@ function redoSnapshot() {
   CoreState.sel = null;
 }
 
+/** @returns {Slide|undefined} Current slide object */
 function currentSlide() { return CoreState.slides[CoreState.cur]; }
+
+/** @returns {Object|null} Currently selected element or null */
 function selectedElement() {
   return CoreState.sel ? (currentSlide()?.elements.find(e => e.id === CoreState.sel) || null) : null;
 }

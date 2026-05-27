@@ -152,6 +152,90 @@ All renderer ↔ main process communication flows through `preload.js` via `cont
 }
 ```
 
+## Type Definitions
+
+### `Slide`
+```json
+{
+  "id": "string — unique identifier",
+  "background": "string — #RRGGBB color",
+  "transition": "string — 'fade' | 'slide' | 'zoom'",
+  "elements": "Array<Element>"
+}
+```
+
+### `Element`
+Base properties shared by all element types:
+```json
+{
+  "id": "string — unique identifier",
+  "type": "string — 'text' | 'title' | 'image' | 'rect' | 'circle' | 'arrow'",
+  "x": "number — left position in px",
+  "y": "number — top position in px",
+  "width": "number — width in px",
+  "height": "number — height in px",
+  "opacity": "number — 0 to 1 (default: 1)",
+  "rotation": "number — degrees (default: 0)",
+  "animType": "string — 'none' | 'fade' | 'slide-up' | 'slide-down' | 'slide-left' | 'slide-right' | 'zoom-in' | 'zoom-out' | 'bounce' | 'pulse'",
+  "animDuration": "number — seconds (default: 0.5)",
+  "animDelay": "number — seconds (default: 0)"
+}
+```
+
+### Element Type Extensions
+
+**text / title** — adds to base:
+```json
+{
+  "content": "string — text content",
+  "fontSize": "number — px (default: 20 / 48)",
+  "fontFamily": "string — font name",
+  "color": "string — #RRGGBB",
+  "bold": "boolean",
+  "italic": "boolean",
+  "underline": "boolean",
+  "strikethrough": "boolean",
+  "textAlign": "string — 'left' | 'center' | 'right'",
+  "bgColor": "string — #RRGGBB or '' (transparent)"
+}
+```
+
+**image** — adds to base:
+```json
+{
+  "src": "string — data URL or base64"
+}
+```
+
+**rect** — adds to base:
+```json
+{
+  "fill": "string — #RRGGBB background",
+  "borderColor": "string — #RRGGBB",
+  "borderWidth": "number — px (default: 2)",
+  "borderRadius": "number — px (default: 0)"
+}
+```
+
+**circle** — adds to base:
+```json
+{
+  "fill": "string — #RRGGBB background",
+  "borderColor": "string — #RRGGBB",
+  "borderWidth": "number — px (default: 2)"
+}
+```
+
+**arrow** — adds to base:
+```json
+{
+  "fill": "string — #RRGGBB stroke color",
+  "borderWidth": "number — px stroke width (default: 3)"
+}
+```
+
+---
+
 ## .slidelab File Format
 
 ```json

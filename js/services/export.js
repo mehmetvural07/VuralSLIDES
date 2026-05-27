@@ -1,7 +1,12 @@
+/** Escapes HTML entities @param {string} s @returns {string} */
 function escHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/**
+ * Builds a printable HTML document from all slides
+ * @returns {string} Full HTML document string
+ */
 function buildExportHTML() {
   let h = '';
   getData().slides.forEach((s, i) => {
@@ -28,10 +33,12 @@ function buildExportHTML() {
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#111}.sp{width:960px;height:540px;position:relative;overflow:hidden;margin:20px auto;box-shadow:0 2px 10px rgba(0,0,0,0.3)}</style></head><body>' + h + '</body></html>';
 }
 
+/** Exports current presentation as PDF via Electron IPC @async @returns {Promise<void>} */
 async function exportPDF() {
   if (window.electronAPI) await window.electronAPI.exportPDF(buildExportHTML());
 }
 
+/** Exports each slide as a PNG image via Electron IPC @async @returns {Promise<void>} */
 async function exportPNG() {
   if (window.electronAPI) await window.electronAPI.exportPNG(getData());
 }

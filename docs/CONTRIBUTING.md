@@ -5,6 +5,7 @@
 - **No semicolons** — project convention
 - Single-line functions where possible
 - No comments in code — keep it clean
+- **JSDoc**: Add JSDoc comments to all exported functions and complex types (see [JSDoc-STYLE.md](JSDoc-STYLE.md))
 - Turkish strings in UI for now; migrate to `I18n.t()` keys when touching
 - Use `I18n.t('key')` for translatable strings; add keys to both `locales/tr.json` and `locales/en.json`
 

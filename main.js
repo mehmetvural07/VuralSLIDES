@@ -8,10 +8,12 @@ let presentationWindow;
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'oslide2_config.json');
 
+/** Validates hex color format, defaults to #ffffff if invalid @param {string} color @returns {string} */
 function validateThemeColor(color) {
   return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : '#ffffff'
 }
 
+/** Validates and normalizes config bounds/types @param {Object} cfg @returns {Object} */
 function validateConfig(cfg) {
   if (!cfg) return getDefaultConfig()
   if (!cfg.settings) cfg.settings = getDefaultConfig().settings
@@ -34,6 +36,7 @@ function validateConfig(cfg) {
   return cfg
 }
 
+/** Loads config from disk, returns defaults on failure @returns {Object} */
 function loadConfig() {
   try {
     if (fs.existsSync(CONFIG_PATH)) {
@@ -44,6 +47,7 @@ function loadConfig() {
   return getDefaultConfig()
 }
 
+/** @returns {Object} Default config object */
 function getDefaultConfig() {
   return { projects: [], recentProjects: [], settings: {
     theme: 'dark', language: 'tr', autoSave: true, autoSaveInterval: 60,
@@ -59,6 +63,7 @@ function getDefaultConfig() {
   } }
 }
 
+/** @returns {Object[]} Default project theme presets */
 function getDefaultThemes() {
   return [
     { id:'th_default', name:'Varsayılan', canvasBg:'#ffffff', titleColor:'#222222', titleFont:'Arial', textColor:'#333333', textFont:'Arial', animType:'fade', animDuration:0.5 },
@@ -69,6 +74,7 @@ function getDefaultThemes() {
   ]
 }
 
+/** Writes config to disk @param {Object} config @returns {void} */
 function saveConfig(config) {
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
@@ -197,16 +203,22 @@ function createPresentationWindow(data) {
   presentationWindow.on('closed', () => { presentationWindow = null; });
 }
 
-// IPC Handlers
+// ─── IPC Handlers ────────────────────────────────────────
+
+/** @returns {Object} Full config */
 ipcMain.handle('get-config', () => loadConfig());
+
+/** @param {Object} config @returns {boolean} */
 ipcMain.handle('save-config', (event, config) => { saveConfig(config); return true; });
 
+/** Opens/focuses editor window and hides home @returns {boolean} */
 ipcMain.handle('open-editor', (event, projectData) => {
   createEditorWindow(projectData);
   if (homeWindow) homeWindow.hide();
   return true;
 });
 
+/** Duplicates a .slidelab file under a new project ID @returns {string|null} */
 ipcMain.handle('duplicate-file', async (event, { sourcePath, newId, name }) => {
   try {
     const data = JSON.parse(fs.readFileSync(sourcePath, 'utf-8'));
@@ -222,6 +234,7 @@ ipcMain.handle('duplicate-file', async (event, { sourcePath, newId, name }) => {
   } catch (err) { console.error('duplicate-file error:', err); return null; }
 });
 
+/** Exports project via save dialog @returns {string|null} */
 ipcMain.handle('export-project', async (event, { projectId, name, slideData }) => {
   const result = await dialog.showSaveDialog(homeWindow || editorWindow, {
     defaultPath: `${name || 'proje'}.slidelab`,
@@ -236,6 +249,7 @@ ipcMain.handle('export-project', async (event, { projectId, name, slideData }) =
   return null;
 });
 
+/** Imports .slidelab via open dialog @returns {{filePath:string, slideData:Object}|null} */
 ipcMain.handle('import-project', async () => {
   const result = await dialog.showOpenDialog(homeWindow || editorWindow, {
     filters: [{ name: 'Slide Projesi', extensions: ['slidelab'] }],
@@ -250,6 +264,7 @@ ipcMain.handle('import-project', async () => {
   return null;
 });
 
+/** Generates a 300×169 thumbnail base64 from slide data @returns {string|null} */
 ipcMain.handle('generate-thumbnail', async (event, slideData) => {
   try {
     const { BrowserWindow: OffscreenWindow } = require('electron');
@@ -267,6 +282,7 @@ ipcMain.handle('generate-thumbnail', async (event, slideData) => {
   } catch (err) { console.error('generate-thumbnail error:', err); return null; }
 });
 
+/** Creates a .slidelab file in userData/projects/ @returns {string|null} */
 ipcMain.handle('create-project-file', async (event, { projectId, name, slideData }) => {
   const projectsDir = path.join(app.getPath('userData'), 'projects');
   try { fs.mkdirSync(projectsDir, { recursive: true }); } catch {}
@@ -282,11 +298,13 @@ ipcMain.handle('create-project-file', async (event, { projectId, name, slideData
   } catch { return null; }
 });
 
+/** Shows home window and sends refresh @returns {boolean} */
 ipcMain.handle('return-home', () => {
   if (homeWindow) { homeWindow.show(); homeWindow.webContents.send('refresh-home'); }
   return true;
 });
 
+/** Saves data to file (or opens save dialog if no path) @returns {string|null} */
 ipcMain.handle('save-file', async (event, data, filePath) => {
   if (filePath) {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -302,6 +320,7 @@ ipcMain.handle('save-file', async (event, data, filePath) => {
   return null;
 });
 
+/** Opens save dialog and writes data @returns {string|null} */
 ipcMain.handle('save-file-as', async (event, data) => {
   const result = await dialog.showSaveDialog(editorWindow || homeWindow, {
     filters: [{ name: 'Slide Projesi', extensions: ['slidelab'] }]
@@ -313,6 +332,7 @@ ipcMain.handle('save-file-as', async (event, data) => {
   return null;
 });
 
+/** Opens .slidelab file picker @returns {{data:Object, filePath:string, fileName:string}|null} */
 ipcMain.handle('open-file-dialog', async () => {
   const result = await dialog.showOpenDialog(homeWindow || editorWindow, {
     filters: [{ name: 'Slide Projesi', extensions: ['slidelab'] }],
@@ -328,6 +348,7 @@ ipcMain.handle('open-file-dialog', async () => {
   return null;
 });
 
+/** Reads and parses a .slidelab file @returns {Object|null} */
 ipcMain.handle('read-file', async (event, filePath) => {
   try {
     const data = fs.readFileSync(filePath, 'utf-8');
@@ -335,10 +356,12 @@ ipcMain.handle('read-file', async (event, filePath) => {
   } catch (err) { console.error('read-file error:', err); return null; }
 });
 
+/** Deletes a file from disk @returns {boolean} */
 ipcMain.handle('delete-file', async (event, filePath) => {
   try { fs.unlinkSync(filePath); return true; } catch (err) { console.error('delete-file error:', err); return false; }
 });
 
+/** Saves and validates project themes @returns {boolean} */
 ipcMain.handle('save-project-themes', (event, themes) => {
   const config = loadConfig()
   if (Array.isArray(themes)) {
@@ -353,6 +376,7 @@ ipcMain.handle('save-project-themes', (event, themes) => {
   return true
 })
 
+/** Updates project metadata (slideCount, path, thumbnail) @returns {boolean} */
 ipcMain.handle('update-project-meta', async (event, { projectId, slideCount, path: filePath, thumbnail }) => {
   const config = loadConfig();
   const p = config.projects.find(pr => pr.id === projectId);
@@ -367,12 +391,14 @@ ipcMain.handle('update-project-meta', async (event, { projectId, slideCount, pat
   return false;
 });
 
+/** Reads an image file and returns base64 + mime @returns {{data:string, mime:string, name:string}|null} */
 ipcMain.handle('read-image', async (event, filePath) => {
   try {
     return await readImageFile(filePath);
   } catch (err) { console.error('read-image error:', err); return null; }
 });
 
+/** Opens native image file picker @returns {{data:string, mime:string, name:string}|null} */
 ipcMain.handle('open-image-dialog', async () => {
   const result = await dialog.showOpenDialog(editorWindow, {
     filters: [{ name: 'Resimler', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'] }],
@@ -384,6 +410,7 @@ ipcMain.handle('open-image-dialog', async () => {
   return null;
 });
 
+/** Reads image file → base64 + mime @param {string} filePath @returns {Promise<{data:string, mime:string, name:string}|null>} */
 async function readImageFile(filePath) {
   try {
     const data = fs.readFileSync(filePath);
@@ -393,11 +420,13 @@ async function readImageFile(filePath) {
   } catch (err) { console.error('readImageFile error:', err); return null; }
 }
 
+/** Opens a fullscreen presentation window @returns {boolean} */
 ipcMain.handle('start-presentation', (event, data) => {
   createPresentationWindow(data);
   return true;
 });
 
+/** Renders HTML to PDF and saves via dialog @returns {boolean} */
 ipcMain.handle('export-pdf', async (event, htmlContent) => {
   const result = await dialog.showSaveDialog(editorWindow, {
     filters: [{ name: 'PDF', extensions: ['pdf'] }]
@@ -417,6 +446,7 @@ ipcMain.handle('export-pdf', async (event, htmlContent) => {
   return false;
 });
 
+/** Renders each slide as PNG and saves to chosen directory @returns {boolean} */
 ipcMain.handle('export-png', async (event, data) => {
   const result = await dialog.showOpenDialog(editorWindow, { properties: ['openDirectory'] });
   if (!result.canceled && result.filePaths.length > 0) {
@@ -440,10 +470,17 @@ ipcMain.handle('export-png', async (event, data) => {
   return false;
 });
 
+/** @param {string} s @returns {string} HTML-escaped string */
 function escHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+/**
+ * Builds an HTML string for a single slide (used in export/thumbnail)
+ * @param {Object} slide - Slide data
+ * @param {string} theme - Theme name
+ * @returns {string} HTML document
+ */
 function buildSlideHTML(slide, theme) {
   const themeColors = {
     default: { bg: '#ffffff', text: '#333333', accent: '#ffd700' },
@@ -477,6 +514,7 @@ function buildSlideHTML(slide, theme) {
   return `<!DOCTYPE html><html><head><style>*{margin:0;padding:0;box-sizing:border-box}body{width:1280px;height:720px;overflow:hidden;background:${slide.background || colors.bg};font-family:Arial,sans-serif;color:${colors.text}}</style></head><body>${elements}</body></html>`;
 }
 
+/** Opens URL in the default system browser @returns {boolean} */
 ipcMain.handle('open-external', async (event, url) => {
   const { shell } = require('electron');
   await shell.openExternal(url);
