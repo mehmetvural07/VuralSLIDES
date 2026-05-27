@@ -15,7 +15,7 @@ function loadConfig() {
       if (!cfg.projectThemes) cfg.projectThemes = getDefaultThemes()
       return cfg
     }
-  } catch {}
+  } catch (err) { console.error('loadConfig error:', err); }
   return getDefaultConfig()
 }
 
@@ -47,7 +47,7 @@ function getDefaultThemes() {
 function saveConfig(config) {
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
-  } catch {}
+  } catch (err) { console.error('saveConfig error:', err); }
 }
 
 function createHomeWindow() {
@@ -194,7 +194,7 @@ ipcMain.handle('duplicate-file', async (event, { sourcePath, newId, name }) => {
     const p = config.projects.find(pr => pr.id === newId);
     if (p) { p.path = filePath; saveConfig(config); }
     return filePath;
-  } catch { return null; }
+  } catch (err) { console.error('duplicate-file error:', err); return null; }
 });
 
 ipcMain.handle('export-project', async (event, { projectId, name, slideData }) => {
@@ -206,7 +206,7 @@ ipcMain.handle('export-project', async (event, { projectId, name, slideData }) =
     try {
       fs.writeFileSync(result.filePath, JSON.stringify(slideData, null, 2), 'utf-8');
       return result.filePath;
-    } catch { return null; }
+    } catch (err) { console.error('export-project error:', err); return null; }
   }
   return null;
 });
@@ -220,7 +220,7 @@ ipcMain.handle('import-project', async () => {
     try {
       const data = JSON.parse(fs.readFileSync(result.filePaths[0], 'utf-8'));
       return { filePath: result.filePaths[0], slideData: data };
-    } catch { return null; }
+    } catch (err) { console.error('import-project error:', err); return null; }
   }
   return null;
 });
@@ -239,7 +239,7 @@ ipcMain.handle('generate-thumbnail', async (event, slideData) => {
     const base64 = resized.toDataURL();
     thumbWin.close();
     return base64;
-  } catch { return null; }
+  } catch (err) { console.error('generate-thumbnail error:', err); return null; }
 });
 
 ipcMain.handle('create-project-file', async (event, { projectId, name, slideData }) => {
@@ -304,11 +304,11 @@ ipcMain.handle('read-file', async (event, filePath) => {
   try {
     const data = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(data);
-  } catch { return null; }
+  } catch (err) { console.error('read-file error:', err); return null; }
 });
 
 ipcMain.handle('delete-file', async (event, filePath) => {
-  try { fs.unlinkSync(filePath); return true; } catch { return false; }
+  try { fs.unlinkSync(filePath); return true; } catch (err) { console.error('delete-file error:', err); return false; }
 });
 
 ipcMain.handle('save-project-themes', (event, themes) => {
@@ -349,7 +349,7 @@ async function readImageFile(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     const mime = ext === '.png' ? 'image/png' : ext === '.gif' ? 'image/gif' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
     return { data: data.toString('base64'), mime, name: path.basename(filePath) };
-  } catch { return null; }
+  } catch (err) { console.error('readImageFile error:', err); return null; }
 }
 
 ipcMain.handle('start-presentation', (event, data) => {
@@ -399,6 +399,10 @@ ipcMain.handle('export-png', async (event, data) => {
   return false;
 });
 
+function escHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function buildSlideHTML(slide, theme) {
   const themeColors = {
     default: { bg: '#ffffff', text: '#333333', accent: '#ffd700' },
@@ -416,7 +420,7 @@ function buildSlideHTML(slide, theme) {
     switch (el.type) {
       case 'text': {
         const deco = []; if (el.underline) deco.push('underline'); if (el.strikethrough) deco.push('line-through');
-        return `<div style="${style};font-size:${el.fontSize || 16}px;font-family:${el.fontFamily || 'Arial'};color:${el.color || colors.text};font-weight:${el.bold ? 'bold' : 'normal'};font-style:${el.italic ? 'italic' : 'normal'};text-decoration:${deco.join(' ')};background:${el.bgColor || 'transparent'};text-align:${el.textAlign || 'left'};overflow:hidden;word-wrap:break-word">${el.content}</div>`;
+        return `<div style="${style};font-size:${el.fontSize || 16}px;font-family:${el.fontFamily || 'Arial'};color:${el.color || colors.text};font-weight:${el.bold ? 'bold' : 'normal'};font-style:${el.italic ? 'italic' : 'normal'};text-decoration:${deco.join(' ')};background:${el.bgColor || 'transparent'};text-align:${el.textAlign || 'left'};overflow:hidden;word-wrap:break-word">${escHtml(el.content || '')}</div>`;
       }
       case 'image':
         return `<div style="${style};overflow:hidden"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain" /></div>`;

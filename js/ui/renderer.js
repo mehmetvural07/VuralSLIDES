@@ -5,22 +5,37 @@ function renderSlide() {
   c.style.background = s.background || '#fff';
   document.getElementById('canvas').style.background = s.background || '#fff';
   if (document.activeElement?.closest?.('.canvas-el.text-el[contenteditable]')) return;
-  c.innerHTML = '';
-  const frag = document.createDocumentFragment();
+  
+  const existingEls = Array.from(c.children).filter(child => child.classList.contains('canvas-el'));
+  const elIds = new Set(s.elements.map(el => el.id));
+  
+  for (const child of existingEls) {
+    if (!elIds.has(child.dataset.id)) {
+      c.removeChild(child);
+    }
+  }
+
   s.elements.forEach((el, i) => {
-    const d = document.createElement('div');
-    const isSel = el.id === App.sel || App.selectedIds?.includes(el.id)
+    let d = c.querySelector(`.canvas-el[data-id="${el.id}"]`);
+    if (!d) {
+      d = document.createElement('div');
+      d.dataset.id = el.id;
+      c.appendChild(d);
+    }
+    
+    const isSel = el.id === App.sel || App.selectedIds?.includes(el.id);
     d.className = 'canvas-el' + ((el.type === 'text' || el.type === 'title') ? ' text-el' : '') + (isSel ? ' selected' : '');
-    d.dataset.id = el.id;
+    
     let css = `left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;z-index:${i}`;
     if (el.opacity !== undefined && el.opacity < 1) css += `;opacity:${el.opacity}`;
     if (el.rotation) css += `;transform:rotate(${el.rotation}deg)`;
     d.style.cssText = css;
+    
+    d.innerHTML = '';
     renderEl(d, el);
     addHandles(d);
-    frag.appendChild(d);
   });
-  c.appendChild(frag);
+  
   if (window.updateStatusBar) window.updateStatusBar();
 }
 

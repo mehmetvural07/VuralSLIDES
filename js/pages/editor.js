@@ -1,4 +1,4 @@
-let settingsCache = {};
+
 let autoSaveTimer = null;
 
 function startAutoSave() {
@@ -118,58 +118,7 @@ function startPresentation() {
   else { localStorage.setItem('presentationData', JSON.stringify(getData())); window.open('presentation.html', '_blank'); }
 }
 
-let editorThemes = []
 
-async function showThemePicker() {
-  if (window.electronAPI) {
-    const cfg = await window.electronAPI.getConfig()
-    editorThemes = cfg.projectThemes || []
-  } else {
-    await ProjectManager.init()
-    editorThemes = await ProjectManager.getThemes()
-  }
-  const list = document.getElementById('editor-theme-list')
-  if (!list) return
-  list.innerHTML = editorThemes.map(th => `
-    <div class="editor-theme-item" data-id="${th.id}">
-      <div class="editor-theme-preview" style="background:${th.canvasBg};padding:12px;border-radius:6px">
-        <div style="color:${th.titleColor};font-family:${th.titleFont};font-size:16px;font-weight:700">Aa</div>
-        <div style="color:${th.textColor};font-family:${th.textFont};font-size:11px;margin-top:4px">${esc(th.name)}</div>
-      </div>
-      <div class="editor-theme-name">${esc(th.name)}</div>
-    </div>
-  `).join('')
-  list.querySelectorAll('.editor-theme-item').forEach(item => {
-    item.onclick = () => applyEditorTheme(item.dataset.id)
-  })
-  document.getElementById('editor-theme-overlay')?.classList.remove('hidden')
-  if (window.lucide) lucide.createIcons()
-}
-
-function applyEditorTheme(themeId) {
-  const th = editorThemes.find(t => t.id === themeId)
-  if (!th) return
-  App.projectTheme = th
-  save()
-  for (const s of App.slides) {
-    s.background = th.canvasBg
-    for (const el of s.elements) {
-      const isTitle = el.type === 'title' || (el.fontSize >= 32 && el.bold)
-      if (el.type === 'text' || el.type === 'title') {
-        el.color = isTitle ? th.titleColor : th.textColor
-        el.fontFamily = isTitle ? th.titleFont : th.textFont
-      }
-      el.animType = th.animType
-      el.animDuration = th.animDuration
-    }
-  }
-  closeThemePicker()
-  renderAll()
-}
-
-function closeThemePicker() {
-  document.getElementById('editor-theme-overlay')?.classList.add('hidden')
-}
 
 function loadProjectData(d) {
   if (d._projectId) App.projectId = d._projectId;
@@ -196,81 +145,7 @@ function updateStatusBar() {
   if (elEl) elEl.textContent = App.sel ? 'Öğe seçili' : 'Seçili öğe yok'
 }
 
-function setSettingField(id, value) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (el.type === 'checkbox') el.checked = !!value;
-  else el.value = value != null ? value : '';
-}
 
-async function openSettings() {
-  if (!window.electronAPI) return;
-  const config = await window.electronAPI.getConfig();
-  const s = config.settings || {};
-  settingsCache = { ...s };
-
-  setSettingField('set-language', s.language);
-  setSettingField('set-autosave', s.autoSave);
-  setSettingField('set-autosave-interval', s.autoSaveInterval);
-  setSettingField('set-default-template', s.defaultTemplate);
-  setSettingField('set-recent-count', s.recentCount);
-  setSettingField('set-snap', s.snapToGrid);
-  setSettingField('set-grid-size', s.gridSize);
-  setSettingField('set-font-family', s.defaultFontFamily);
-  setSettingField('set-font-size', s.defaultFontSize);
-  setSettingField('set-canvas-bg', s.canvasBg);
-  setSettingField('set-auto-panel', s.autoOpenPanel);
-  setSettingField('set-thumb-size', s.thumbSize);
-
-  document.getElementById('settings-overlay').classList.remove('hidden');
-
-  if (window.lucide) lucide.createIcons();
-
-  // Set theme selector cards
-  const themeCards = document.querySelectorAll('.theme-card');
-  themeCards.forEach(card => {
-    card.classList.toggle('active', card.dataset.theme === s.theme);
-  });
-}
-
-function closeSettings() {
-  document.getElementById('settings-overlay').classList.add('hidden');
-}
-
-function getSettingsValues() {
-  const activeCard = document.querySelector('.theme-card.active');
-  return {
-    theme: activeCard?.dataset?.theme || 'dark',
-    language: document.getElementById('set-language')?.value,
-    autoSave: document.getElementById('set-autosave')?.checked,
-    autoSaveInterval: parseInt(document.getElementById('set-autosave-interval')?.value) || 60,
-    defaultTemplate: document.getElementById('set-default-template')?.value,
-    recentCount: parseInt(document.getElementById('set-recent-count')?.value) || 10,
-    snapToGrid: document.getElementById('set-snap')?.checked,
-    gridSize: parseInt(document.getElementById('set-grid-size')?.value) || 20,
-    defaultFontFamily: document.getElementById('set-font-family')?.value,
-    defaultFontSize: parseInt(document.getElementById('set-font-size')?.value) || 16,
-    canvasBg: document.getElementById('set-canvas-bg')?.value,
-    autoOpenPanel: document.getElementById('set-auto-panel')?.checked,
-    thumbSize: document.getElementById('set-thumb-size')?.value
-  };
-}
-
-async function saveSettings() {
-  const s = getSettingsValues();
-  if (window.electronAPI) {
-    const config = await window.electronAPI.getConfig();
-    Object.assign(config.settings || {}, s);
-    await window.electronAPI.saveConfig(config);
-  }
-  settingsCache = s;
-  ThemeManager.setTheme(s.theme);
-  I18n.setLocale(s.language || 'tr');
-  localStorage.setItem('oslide2_locale', s.language || 'tr');
-  if (window.setSnapEnabled) window.setSnapEnabled(s.snapToGrid !== false)
-  startAutoSave()
-  closeSettings();
-}
 
 async function loadTheme() {
   if (window.electronAPI) {
@@ -558,11 +433,7 @@ window.exportPDF = exportPDF;
 window.exportPNG = exportPNG;
 window.loadProjectData = loadProjectData;
 window.updateStatusBar = updateStatusBar;
-window.showThemePicker = showThemePicker;
-window.closeThemePicker = closeThemePicker;
-window.openSettings = openSettings;
-window.closeSettings = closeSettings;
-window.saveSettings = saveSettings;
+
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
