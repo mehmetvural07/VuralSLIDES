@@ -161,6 +161,3 @@ All shortcuts are customizable in Settings > Shortcuts.
 - [ ] PDF import
 - [ ] Undo/redo for element position changes during drag
 
-## License
-
-ISC
